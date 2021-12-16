@@ -18,13 +18,13 @@ from ..datatypes import SonderaData, StationType, Coordinate
 from .parameters import parameter_patterns
 from .parameters import ParametersMetObs as Parameters
 
+
 class ClientSMHIMetObs:
     _api_url = 'https://opendata-download-metobs.smhi.se/api/version/1.0'
 
     def __init__(self):
 
         self.Parameters = Parameters
-
 
         self._api_url_template_data = Template(self._api_url +
                                                '/parameter/$parameter'
@@ -33,12 +33,13 @@ class ClientSMHIMetObs:
                                                '/data.$extension')
 
         self._api_url_template_station = Template(self._api_url +
-                                               '/parameter/$parameter'
-                                               '/station/$station')
+                                                  '/parameter/$parameter'
+                                                  '/station/$station')
 
         self.api_params_dict = self.get_api_parameters(print_params=False)
 
-    def get_observations(self, parameter: Union[Parameters, int], station: int, period: str, return_tz=None) -> SonderaData:
+    def get_observations(self, parameter: Union[Parameters, int], station: int, period: str,
+                         return_tz=None) -> SonderaData:
         """
         Get observations for a given parameter, station and period
         ----------
