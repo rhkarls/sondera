@@ -61,10 +61,33 @@ class ParametersMetObs(Enum):
 
 
 class ParametersGWLevels(Enum):
-    LevelBelowWellTop = 1  # grundvattenniva_cm_u._roroverkant
-    LevelAboveSeaLevel = 2  # grundvattenniva_m_o.h.
-    LevelBelowGroundSurface = 3  # grundvattenniva_m_under_markyta
+    LevelBelowWellTop = 'grundvattenniva_cm_u._roroverkant'
+    LevelAboveSeaLevel = 'grundvattenniva_m_o.h.'
+    LevelBelowGroundSurface = 'grundvattenniva_m_under_markyta'
 
+
+class SGULanCodes(Enum):
+    Blekinge = '10'
+    Dalarna = '20'
+    Gotland = '09'
+    Gavleborg = '21'
+    Halland = '13'
+    Jamtland = '23'
+    Jonkoping = '06'
+    Kalmar = '08'
+    Kronoberg = '07'
+    Norrbotten = '25'
+    Skane = '12'
+    Stockholm = '01'
+    Sodermanland = '04'
+    Uppsala = '03'
+    Varmland = '17'
+    Vasterbotten = '24'
+    Vasternorrland = '22'
+    Vastmanland = '19'
+    VastraGotaland = '14'
+    Orebro = '18'
+    Ostergotland = '05'
 
 # Patterns to more safely find start of CSV data from SMHI MetObs, and for parsing date and time
 # TODO timestamp_type might not be needed

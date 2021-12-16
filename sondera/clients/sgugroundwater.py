@@ -17,7 +17,7 @@ import requests
 
 from ..datatypes import SonderaData, StationType, Coordinate
 
-from .parameters import parameter_patterns, GWLevelsLanCodes
+from .parameters import parameter_patterns, SGULanCodes
 from .parameters import ParametersGWLevels as Parameters
 
 
@@ -74,15 +74,15 @@ class ClientSGUGroundwater:
 
 
 
-    def get_all_data_lan(self, lan_code: Union[GWLevelsLanCodes, str]):
+    def get_all_data_lan(self, lan_code: Union[SGULanCodes, str]):
         # can probably share a lot with above get_station_data
         pass
 
-    def get_station_info_lan(self, lan_code: Union[GWLevelsLanCodes, str]):
+    def get_station_info_lan(self, lan_code: Union[SGULanCodes, str]):
         """ Get all stations and station metadata for a given län"""
 
         if isinstance(lan_code, str):
-            lan_code = GWLevelsLanCodes(lan_code)
+            lan_code = SGULanCodes(lan_code)
 
         api_vars = {'lancode': lan_code.value}
 
