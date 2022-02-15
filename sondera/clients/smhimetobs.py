@@ -19,7 +19,7 @@ from .parameters import parameter_patterns
 from .parameters import ParametersMetObs as Parameters
 
 
-class ClientSMHIMetObs:
+class MetObsClient:
     _api_url = 'https://opendata-download-metobs.smhi.se/api/version/1.0'
 
     def __init__(self):

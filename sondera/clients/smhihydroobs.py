@@ -9,11 +9,11 @@ Inherits from metobs
 import datetime as dt
 
 from .parameters import ParametersHydroObs as Parameters
-from .smhimetobs import ClientSMHIMetObs
+from .smhimetobs import MetObsClient
 from ..datatypes import Coordinate, SonderaData, StationType
 
 
-class ClientSMHIHydroObs(ClientSMHIMetObs):
+class HydroObsClient(MetObsClient):
     _api_url = 'https://opendata-download-hydroobs.smhi.se/api/version/1.0'
 
     def __init__(self):
