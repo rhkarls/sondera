@@ -4,7 +4,6 @@ Client for SMHI metobs open-data api
 """
 
 import collections
-from enum import Enum
 from io import StringIO
 from string import Template
 import datetime as dt
@@ -13,10 +12,10 @@ from typing import Union
 import pandas as pd
 import requests
 
-from ..datatypes import SonderaData, StationType, Coordinate
+from ...datatypes import SonderaData, StationType, Coordinate
 
-from .parameters import parameter_patterns
-from .parameters import ParametersMetObs as Parameters
+from ..parameters import parameter_patterns
+from ..parameters import ParametersMetObs as Parameters
 
 
 class MetObsClient:
@@ -38,7 +37,10 @@ class MetObsClient:
 
         self.api_params_dict = self.get_api_parameters(print_params=False)
 
-    def get_observations(self, parameter: Union[Parameters, int], station: int, period: str,
+    def get_observations(self,
+                         parameter: Union[Parameters, int],
+                         station: int,
+                         period: str,
                          return_tz=None) -> SonderaData:
         """
         Get observations for a given parameter, station and period
@@ -46,8 +48,12 @@ class MetObsClient:
         parameter : Enum or int
         station : int
         period : str
-            latest-hour, latest-day, latest-months or corrected-archive. Note
-            all periods are not available to all stations/parameters.
+            latest-hour, latest-day, latest-months or corrected-archive as
+            supported directly by the SMHI api.
+            In addition, corrected-archive-latest-months can be passed, which is
+            a combination of two api calls.
+            Note all periods are not available to all stations/parameters.
+
         return_tz : Not implemented
 
         Returns
@@ -56,6 +62,32 @@ class MetObsClient:
         """
 
         # TODO allow for period 'all', which first gets corrected archive then last x
+        # 'corrected-archive-latest-months', need to move the client call away
+        # from the api call itself
+        if period.lower() == 'corrected-archive-latest-months':
+            station_data_ca = self._api_call_observations(parameter,
+                                                          station,
+                                                          'corrected-archive')
+
+            station_data_lm = self._api_call_observations(parameter,
+                                                          station,
+                                                          'latest-months')
+            # combine the two data sets, base of data_lm and extend the data series
+
+            station_data = station_data_lm  # TODO copy?
+            new_obs_s = station_data_ca.data.combine_first(station_data_lm.data)
+            new_aux_s = station_data_ca.aux_data.combine_first(station_data_lm.aux_data)
+            station_data.data = new_obs_s
+            station_data.aux_data = new_aux_s
+
+            return station_data
+        else:
+            return self._api_call_observations(parameter, station, period)
+
+    def _api_call_observations(self,
+                               parameter: Union[Parameters, int],
+                               station: int,
+                               period: str) -> SonderaData:
         # extension for data
         if period.lower() == 'corrected-archive':
             api_ext = 'csv'
@@ -141,6 +173,8 @@ class MetObsClient:
             obs_s = csv_df[swe_par_name]
 
             aux_df = csv_df[set(csv_df.keys()) - {swe_par_name}]
+            # Rename 'Kvalitet' to 'quality' in aux data as in other json data
+            aux_df = aux_df.rename({'Kvalitet': 'quality'}, axis=1)
 
             md_buffer = StringIO(api_content_decoded)
             md_str = ''
@@ -173,6 +207,12 @@ class MetObsClient:
 
         return station_data
 
+    def _json_to_dataframe(self):
+        pass
+
+    def _csv_to_dataframe(self):
+        pass
+    
     def _create_data_obj(self, aux_df, obs_s, parameter,
                          station_md, station_name, md_str):
         # Get positions, can be several if station moved

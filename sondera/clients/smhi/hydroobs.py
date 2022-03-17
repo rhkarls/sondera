@@ -8,9 +8,9 @@ Inherits from metobs
 
 import datetime as dt
 
-from .parameters import ParametersHydroObs as Parameters
-from .smhimetobs import MetObsClient
-from ..datatypes import Coordinate, SonderaData, StationType
+from ..parameters import ParametersHydroObs as Parameters
+from .metobs import MetObsClient
+from ...datatypes import Coordinate, SonderaData, StationType
 
 
 class HydroObsClient(MetObsClient):

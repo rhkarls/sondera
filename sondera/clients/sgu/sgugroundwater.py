@@ -101,17 +101,17 @@ class ClientSGUGroundwater:
 
             s_d = {'X': s_x,
                    'Y': s_y,
-                   'code': s['properties'].get('omrade-_och_stationsnummer',None),
-                   'name': s['properties'].get('stationens_namn',None),
-                   'start_date': s['properties'].get('startdatum_for_matning',None),
-                   'aquifer_type': s['properties'].get('akvifertyp',None),
-                   'topographic_position': s['properties'].get('topografiskt_lage',None),
+                   'code': s['properties'].get('omrade-_och_stationsnummer', None),
+                   'name': s['properties'].get('stationens_namn', None),
+                   'start_date': s['properties'].get('startdatum_for_matning', None),
+                   'aquifer_type': s['properties'].get('akvifertyp', None),
+                   'topographic_position': s['properties'].get('topografiskt_lage', None),
                    'reference_datum_well_top': s['properties'].get('referensniva_for_roroverkant_m.o.h.', None),
-                   'well_elev_above_ground': s['properties'].get('rorhojd_ovan_mark_m',None),
-                   'well_length': s['properties'].get('total_rorlangd_m',None),
-                   'municipality': s['properties'].get('kommunkod',None),
-                   'eucd_groundwater_resource': s['properties'].get('eucd_far_grundvattenforekomst',None),
-                   'measurement_quality': s['properties'].get('nivamatningskvalitet',None)
+                   'well_elev_above_ground': s['properties'].get('rorhojd_ovan_mark_m', None),
+                   'well_length': s['properties'].get('total_rorlangd_m', None),
+                   'municipality': s['properties'].get('kommunkod', None),
+                   'eucd_groundwater_resource': s['properties'].get('eucd_far_grundvattenforekomst', None),
+                   'measurement_quality': s['properties'].get('nivamatningskvalitet', None)
                    }
             stations_df = stations_df.append(pd.Series(s_d, name=s_d['code']))
 

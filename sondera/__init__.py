@@ -4,5 +4,6 @@ __author__ = """Reinert Huseby Karlsen"""
 __email__ = ''
 __version__ = '0.1.0'
 
-from .clients.smhimetobs import ClientSMHIMetObs
-from .clients.smhihydroobs import ClientSMHIHydroObs
+from .clients import smhi
+
+__all__ = [smhi]
