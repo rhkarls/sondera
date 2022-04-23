@@ -26,21 +26,11 @@ class MetObsClient:
 
         self.Parameters = Parameters
 
-        # self._api_url_template_data_x = Template(self._api_url +
-        #                                        '/parameter/$parameter'
-        #                                        '/station/$station'
-        #                                        '/period/$period'
-        #                                        '/data.$extension')
-
         self._api_url_template_data = (self._api_url +
                                        '/parameter/{parameter}'
                                        '/station/{station}'
                                        '/period/{period}'
                                        '/data.{extension}')
-
-        # self._api_url_template_station_x = Template(self._api_url +
-        #                                           '/parameter/$parameter'
-        #                                           '/station/$station')
 
         self._api_url_template_station = (self._api_url +
                                                   '/parameter/{parameter}'
@@ -130,75 +120,11 @@ class MetObsClient:
             api_result_json = api_get_result.json()
 
             obs_s, aux_df, station_name, md_str = self._json_to_dataframe(api_result_json, parameter)
-            # # below here to other function
-            # df_values = pd.DataFrame(api_result_json['value'])
-            #
-            # if parameter_patterns[parameter]['timestamp_type'] in ['date', 'date_time']:
-            #     df_values['timestamp'] = pd.to_datetime(df_values['date'], unit='ms',
-            #                                             origin='unix')  # TODO set timezone
-            #     df_values = df_values.drop('date', axis=1)
-            # elif parameter_patterns[parameter]['timestamp_type'] == 'ref':
-            #     df_values['timestamp'] = pd.to_datetime(df_values['ref'])  # TODO set timezone
-            #     df_values = df_values.drop('ref', axis=1)
-            #
-            # df_values = df_values.set_index('timestamp')
-            # obs_s = df_values['value'].copy()
-            # aux_df = df_values[set(df_values.keys()) - {'value'}]
-            #
-            # station_name = api_result_json['station']['name']
-            #
-            # md_str = str(api_result_json['parameter'])
+
         else:
             api_content_decoded = api_get_result.content.decode(encoding='utf-8-sig')
 
             obs_s, aux_df, station_name, md_str = self._csv_to_dataframe(api_content_decoded, parameter)
-            # # find csv data line
-            # csv_data_line = self._find_csv_data_line(api_content_decoded,
-            #                                          parameter_patterns[parameter]['str_pattern'])
-            #
-            # # parse data
-            # csv_df = pd.read_csv(StringIO(api_content_decoded),
-            #                      sep=';',
-            #                      header=0,
-            #                      skiprows=csv_data_line,
-            #                      usecols=parameter_patterns[parameter]['use_cols'],
-            #                      index_col=False)
-            #
-            # # handle the various formats date and time is provided in
-            # # TODO might be able to avoid 'timestamp_type' if there is a clear system
-            # # i.e. if first key is 'Datum', 'Datum (svensk sommartid)', or 'Representativt dygn'
-            # if parameter_patterns[parameter]['timestamp_type'] in ['date_time']:
-            #     csv_df['timestamp'] = pd.to_datetime(csv_df['Datum'] + ' '
-            #                                          + csv_df['Tid (UTC)'])
-            #     csv_df = csv_df.drop(['Datum', 'Tid (UTC)'], axis=1)
-            # elif parameter_patterns[parameter]['timestamp_type'] in ['date']:
-            #     csv_df['timestamp'] = pd.to_datetime(csv_df['Datum (svensk sommartid)'])
-            #     csv_df = csv_df.drop(['Datum (svensk sommartid)'], axis=1)
-            # elif parameter_patterns[parameter]['timestamp_type'] in ['ref']:
-            #     csv_df['timestamp'] = pd.to_datetime(csv_df['Representativt dygn'])
-            #     csv_df = csv_df.drop(['Representativt dygn'], axis=1)
-            #
-            # csv_df = csv_df.set_index('timestamp')
-            # swe_par_name = self.api_params_dict[parameter.value]['title']
-            # obs_s = csv_df[swe_par_name]
-            #
-            # aux_df = csv_df[set(csv_df.keys()) - {swe_par_name}]
-            # # Rename 'Kvalitet' to 'quality' in aux data as in other json data
-            # aux_df = aux_df.rename({'Kvalitet': 'quality'}, axis=1)
-            #
-            # md_buffer = StringIO(api_content_decoded)
-            # md_str = ''
-            # for _ in range(csv_data_line):
-            #     md_str = md_str + md_buffer.readline()
-            #
-            # # Read station info, first two lines of csv file
-            # csv_sn = pd.read_csv(StringIO(api_content_decoded),
-            #                      sep=';',
-            #                      nrows=1,
-            #                      header=0)
-            #
-            # # Station name is not accessible from station .json from met obs api
-            # station_name = csv_sn.loc[0]['Stationsnamn']
 
         obs_s.name = parameter.name
 
