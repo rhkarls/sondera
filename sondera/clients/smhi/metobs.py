@@ -5,13 +5,14 @@ Client for SMHI metobs open-data api
 
 import collections
 from io import StringIO
-from string import Template
+# from string import Template
 import datetime as dt
 from typing import Union
 
 import pandas as pd
 import requests
 
+from ...exceptions import APIError, SonderaError
 from ...datatypes import SonderaData, StationType, Coordinate
 
 from ..parameters import parameter_patterns
@@ -25,17 +26,29 @@ class MetObsClient:
 
         self.Parameters = Parameters
 
-        self._api_url_template_data = Template(self._api_url +
-                                               '/parameter/$parameter'
-                                               '/station/$station'
-                                               '/period/$period'
-                                               '/data.$extension')
+        # self._api_url_template_data_x = Template(self._api_url +
+        #                                        '/parameter/$parameter'
+        #                                        '/station/$station'
+        #                                        '/period/$period'
+        #                                        '/data.$extension')
 
-        self._api_url_template_station = Template(self._api_url +
-                                                  '/parameter/$parameter'
-                                                  '/station/$station')
+        self._api_url_template_data = (self._api_url +
+                                       '/parameter/{parameter}'
+                                       '/station/{station}'
+                                       '/period/{period}'
+                                       '/data.{extension}')
+
+        # self._api_url_template_station_x = Template(self._api_url +
+        #                                           '/parameter/$parameter'
+        #                                           '/station/$station')
+
+        self._api_url_template_station = (self._api_url +
+                                                  '/parameter/{parameter}'
+                                                  '/station/{station}')
 
         self.api_params_dict = self.get_api_parameters(print_params=False)
+
+        self.get_all_stations_called=False
 
     def get_observations(self,
                          parameter: Union[Parameters, int],
@@ -50,9 +63,9 @@ class MetObsClient:
         period : str
             latest-hour, latest-day, latest-months or corrected-archive as
             supported directly by the SMHI api.
-            In addition, corrected-archive-latest-months can be passed, which is
-            a combination of two api calls.
-            Note all periods are not available to all stations/parameters.
+            In addition, 'corrected-archive-latest-months' can be passed, which is
+            a combination of the two api calls.
+            Note that all periods are not available for all stations/parameters.
 
         return_tz : Not implemented
 
@@ -61,7 +74,6 @@ class MetObsClient:
         SonderaData object
         """
 
-        # TODO allow for period 'all', which first gets corrected archive then last x
         # 'corrected-archive-latest-months', need to move the client call away
         # from the api call itself
         if period.lower() == 'corrected-archive-latest-months':
@@ -94,9 +106,11 @@ class MetObsClient:
         else:
             api_ext = 'json'
 
-        # TODO try except
         if isinstance(parameter, int):
-            parameter = self.Parameters(parameter)
+            try:
+                parameter = self.Parameters(parameter)
+            except ValueError as error:
+                raise
 
         api_vars = {'parameter': parameter.value,
                     'station': station,
@@ -104,91 +118,87 @@ class MetObsClient:
                     'extension': api_ext}
 
         # Get station metadata
-        # TODO move to function
-        api_url_station = self._api_url_template_station.substitute(api_vars) + '.json'
-        api_get_station = requests.get(api_url_station)
+        api_url_station = self._api_url_template_station.format(**api_vars) + '.json'
+        api_get_station = self._make_request(api_url_station)
         station_md = api_get_station.json()
 
         # Get data
-        api_url = self._api_url_template_data.substitute(api_vars)
-        api_get_result = requests.get(api_url)
+        api_url = self._api_url_template_data.format(**api_vars)
+        api_get_result = self._make_request(api_url)
 
-        # Check result for error
-        if api_get_result.status_code != 200:
-            raise Exception(api_get_result.reason)  # Make custom class TODO add status_code
-
-        # TODO separate these to functions
-        # TODO find out when the data can be split
-        # Probably after setting timestamp and values to obs series, or around there
-        # _json_to_dataframe
-        # _csv_to_dataframe
         if api_ext == 'json':
             api_result_json = api_get_result.json()
-            df_values = pd.DataFrame(api_result_json['value'])
 
-            if parameter_patterns[parameter]['timestamp_type'] in ['date', 'date_time']:
-                df_values['timestamp'] = pd.to_datetime(df_values['date'], unit='ms',
-                                                        origin='unix')  # TODO set timezone
-                df_values = df_values.drop('date', axis=1)
-            elif parameter_patterns[parameter]['timestamp_type'] == 'ref':
-                df_values['timestamp'] = pd.to_datetime(df_values['ref'])  # TODO set timezone
-                df_values = df_values.drop('ref', axis=1)
-
-            df_values = df_values.set_index('timestamp')
-            obs_s = df_values['value'].copy()
-            aux_df = df_values[set(df_values.keys()) - {'value'}]
-
-            station_name = api_result_json['station']['name']
-
-            md_str = str(api_result_json['parameter'])
+            obs_s, aux_df, station_name, md_str = self._json_to_dataframe(api_result_json, parameter)
+            # # below here to other function
+            # df_values = pd.DataFrame(api_result_json['value'])
+            #
+            # if parameter_patterns[parameter]['timestamp_type'] in ['date', 'date_time']:
+            #     df_values['timestamp'] = pd.to_datetime(df_values['date'], unit='ms',
+            #                                             origin='unix')  # TODO set timezone
+            #     df_values = df_values.drop('date', axis=1)
+            # elif parameter_patterns[parameter]['timestamp_type'] == 'ref':
+            #     df_values['timestamp'] = pd.to_datetime(df_values['ref'])  # TODO set timezone
+            #     df_values = df_values.drop('ref', axis=1)
+            #
+            # df_values = df_values.set_index('timestamp')
+            # obs_s = df_values['value'].copy()
+            # aux_df = df_values[set(df_values.keys()) - {'value'}]
+            #
+            # station_name = api_result_json['station']['name']
+            #
+            # md_str = str(api_result_json['parameter'])
         else:
             api_content_decoded = api_get_result.content.decode(encoding='utf-8-sig')
-            # find csv data line
-            csv_data_line = self._find_csv_data_line(api_content_decoded,
-                                                     parameter_patterns[parameter]['str_pattern'])
-            # parse data
-            csv_df = pd.read_csv(StringIO(api_content_decoded),
-                                 sep=';',
-                                 header=0,
-                                 skiprows=csv_data_line,
-                                 usecols=parameter_patterns[parameter]['use_cols'],
-                                 index_col=False)
 
-            # handle the various formats date and time is provided in
-            # TODO might be able to avoid 'timestamp_type' if there is a clear system
-            # i.e. if first key is 'Datum', 'Datum (svensk sommartid)', or 'Representativt dygn'
-            if parameter_patterns[parameter]['timestamp_type'] in ['date_time']:
-                csv_df['timestamp'] = pd.to_datetime(csv_df['Datum'] + ' '
-                                                     + csv_df['Tid (UTC)'])
-                csv_df = csv_df.drop(['Datum', 'Tid (UTC)'], axis=1)
-            elif parameter_patterns[parameter]['timestamp_type'] in ['date']:
-                csv_df['timestamp'] = pd.to_datetime(csv_df['Datum (svensk sommartid)'])
-                csv_df = csv_df.drop(['Datum (svensk sommartid)'], axis=1)
-            elif parameter_patterns[parameter]['timestamp_type'] in ['ref']:
-                csv_df['timestamp'] = pd.to_datetime(csv_df['Representativt dygn'])
-                csv_df = csv_df.drop(['Representativt dygn'], axis=1)
-
-            csv_df = csv_df.set_index('timestamp')
-            swe_par_name = self.api_params_dict[parameter.value]['title']
-            obs_s = csv_df[swe_par_name]
-
-            aux_df = csv_df[set(csv_df.keys()) - {swe_par_name}]
-            # Rename 'Kvalitet' to 'quality' in aux data as in other json data
-            aux_df = aux_df.rename({'Kvalitet': 'quality'}, axis=1)
-
-            md_buffer = StringIO(api_content_decoded)
-            md_str = ''
-            for _ in range(csv_data_line):
-                md_str = md_str + md_buffer.readline()
-
-            # Read station info, first two lines of csv file
-            csv_sn = pd.read_csv(StringIO(api_content_decoded),
-                                 sep=';',
-                                 nrows=1,
-                                 header=0)
-
-            # Station name is not accessible from station .json from met obs api
-            station_name = csv_sn.loc[0]['Stationsnamn']
+            obs_s, aux_df, station_name, md_str = self._csv_to_dataframe(api_content_decoded, parameter)
+            # # find csv data line
+            # csv_data_line = self._find_csv_data_line(api_content_decoded,
+            #                                          parameter_patterns[parameter]['str_pattern'])
+            #
+            # # parse data
+            # csv_df = pd.read_csv(StringIO(api_content_decoded),
+            #                      sep=';',
+            #                      header=0,
+            #                      skiprows=csv_data_line,
+            #                      usecols=parameter_patterns[parameter]['use_cols'],
+            #                      index_col=False)
+            #
+            # # handle the various formats date and time is provided in
+            # # TODO might be able to avoid 'timestamp_type' if there is a clear system
+            # # i.e. if first key is 'Datum', 'Datum (svensk sommartid)', or 'Representativt dygn'
+            # if parameter_patterns[parameter]['timestamp_type'] in ['date_time']:
+            #     csv_df['timestamp'] = pd.to_datetime(csv_df['Datum'] + ' '
+            #                                          + csv_df['Tid (UTC)'])
+            #     csv_df = csv_df.drop(['Datum', 'Tid (UTC)'], axis=1)
+            # elif parameter_patterns[parameter]['timestamp_type'] in ['date']:
+            #     csv_df['timestamp'] = pd.to_datetime(csv_df['Datum (svensk sommartid)'])
+            #     csv_df = csv_df.drop(['Datum (svensk sommartid)'], axis=1)
+            # elif parameter_patterns[parameter]['timestamp_type'] in ['ref']:
+            #     csv_df['timestamp'] = pd.to_datetime(csv_df['Representativt dygn'])
+            #     csv_df = csv_df.drop(['Representativt dygn'], axis=1)
+            #
+            # csv_df = csv_df.set_index('timestamp')
+            # swe_par_name = self.api_params_dict[parameter.value]['title']
+            # obs_s = csv_df[swe_par_name]
+            #
+            # aux_df = csv_df[set(csv_df.keys()) - {swe_par_name}]
+            # # Rename 'Kvalitet' to 'quality' in aux data as in other json data
+            # aux_df = aux_df.rename({'Kvalitet': 'quality'}, axis=1)
+            #
+            # md_buffer = StringIO(api_content_decoded)
+            # md_str = ''
+            # for _ in range(csv_data_line):
+            #     md_str = md_str + md_buffer.readline()
+            #
+            # # Read station info, first two lines of csv file
+            # csv_sn = pd.read_csv(StringIO(api_content_decoded),
+            #                      sep=';',
+            #                      nrows=1,
+            #                      header=0)
+            #
+            # # Station name is not accessible from station .json from met obs api
+            # station_name = csv_sn.loc[0]['Stationsnamn']
 
         obs_s.name = parameter.name
 
@@ -207,12 +217,83 @@ class MetObsClient:
 
         return station_data
 
-    def _json_to_dataframe(self):
-        pass
+    def _json_to_dataframe(self, api_result_json, parameter):
+        # below here to other function
+        df_values = pd.DataFrame(api_result_json['value'])
 
-    def _csv_to_dataframe(self):
-        pass
-    
+        if parameter_patterns[parameter]['timestamp_type'] in ['date', 'date_time']:
+            df_values['timestamp'] = pd.to_datetime(df_values['date'], unit='ms',
+                                                    origin='unix')  # TODO set timezone
+            df_values = df_values.drop('date', axis=1)
+        elif parameter_patterns[parameter]['timestamp_type'] == 'ref':
+            df_values['timestamp'] = pd.to_datetime(df_values['ref'])  # TODO set timezone
+            df_values = df_values.drop('ref', axis=1)
+
+        df_values = df_values.set_index('timestamp')
+        obs_s = df_values['value'].copy()
+        aux_df = df_values[set(df_values.keys()) - {'value'}]
+
+        station_name = api_result_json['station']['name']
+
+        md_str = str(api_result_json['parameter'])
+
+        return obs_s, aux_df, station_name, md_str
+
+    def _csv_to_dataframe(self, api_content_decoded, parameter):
+        # find csv data line
+        csv_data_line = self._find_csv_data_line(api_content_decoded,
+                                                 parameter_patterns[parameter]['str_pattern'])
+
+        if csv_data_line is None:
+            raise SonderaError(message='String pattern for parsing csv not matched',
+                               report_issue=True, issue_messages=[parameter])
+
+        # parse data
+        csv_df = pd.read_csv(StringIO(api_content_decoded),
+                             sep=';',
+                             header=0,
+                             skiprows=csv_data_line,
+                             usecols=parameter_patterns[parameter]['use_cols'],
+                             index_col=False)
+
+        # handle the various formats date and time is provided in
+        # TODO might be able to avoid 'timestamp_type' if there is a clear system
+        # i.e. if first key is 'Datum', 'Datum (svensk sommartid)', or 'Representativt dygn'
+        if parameter_patterns[parameter]['timestamp_type'] in ['date_time']:
+            csv_df['timestamp'] = pd.to_datetime(csv_df['Datum'] + ' '
+                                                 + csv_df['Tid (UTC)'])
+            csv_df = csv_df.drop(['Datum', 'Tid (UTC)'], axis=1)
+        elif parameter_patterns[parameter]['timestamp_type'] in ['date']:
+            csv_df['timestamp'] = pd.to_datetime(csv_df['Datum (svensk sommartid)'])
+            csv_df = csv_df.drop(['Datum (svensk sommartid)'], axis=1)
+        elif parameter_patterns[parameter]['timestamp_type'] in ['ref']:
+            csv_df['timestamp'] = pd.to_datetime(csv_df['Representativt dygn'])
+            csv_df = csv_df.drop(['Representativt dygn'], axis=1)
+
+        csv_df = csv_df.set_index('timestamp')
+        swe_par_name = self.api_params_dict[parameter.value]['title']
+        obs_s = csv_df[swe_par_name]
+
+        aux_df = csv_df[set(csv_df.keys()) - {swe_par_name}]
+        # Rename 'Kvalitet' to 'quality' in aux data as in other json data
+        aux_df = aux_df.rename({'Kvalitet': 'quality'}, axis=1)
+
+        md_buffer = StringIO(api_content_decoded)
+        md_str = ''
+        for _ in range(csv_data_line):
+            md_str = md_str + md_buffer.readline()
+
+        # Read station info, first two lines of csv file
+        csv_sn = pd.read_csv(StringIO(api_content_decoded),
+                             sep=';',
+                             nrows=1,
+                             header=0)
+
+        # Station name is not accessible from station .json from met obs api
+        station_name = csv_sn.loc[0]['Stationsnamn']
+
+        return obs_s, aux_df, station_name, md_str
+
     def _create_data_obj(self, aux_df, obs_s, parameter,
                          station_md, station_name, md_str):
         # Get positions, can be several if station moved
@@ -249,12 +330,21 @@ class MetObsClient:
     def get_parameters_station(self, station):
         # get available parameters for station
         pass
-        # Requires many requests to API, not available
+        # Requires many requests to API, not available. call get_all_stations
+        # and get pars where station is listed
+
 
     def get_all_stations(self):
         pass
         # Requires many requests to API, not available
         # Need to loop over parameters
+        if not self.get_all_stations_called:
+            self.all_stations_dict = {}
+            # call get_stations_parameter
+            self.get_all_stations_called = True
+
+        return self.all_stations_dict
+
 
     def get_stations_parameter(self, parameter):
         # Get stations where parameter is available
@@ -270,7 +360,7 @@ class MetObsClient:
 
     @staticmethod
     def _find_csv_data_line(api_content_decoded, str_pattern):
-        """ Find first line of data (i.e. the header) for .csv type returns
+        """ Find first line of data (i.e. the data header) for .csv type returns
         Line is matched with str_pattern, which varies across parameters
         Note that line numbers varies for the same parameters as well """
 
@@ -279,16 +369,25 @@ class MetObsClient:
             with StringIO(api_content_decoded) as csv_data:
                 for line in csv_data:
                     if line.startswith(str_pattern):
-                        break
+                        return line_data_start
                     line_data_start += 1
-        except:
-            pass  # TODO
+                # if loop finishes without returning, str was not found
+                return None
+        except TypeError as e:
+            print(e)
+            raise
 
-        return line_data_start
 
-    def _make_request(self):
+    def _make_request(self, api_url):
         """ All API requests are passed through this method """
-        pass
+        api_get_result = requests.get(api_url)
+
+        # Check result for error
+        if api_get_result.status_code != 200:
+            raise APIError(api_get_result.status_code,
+                           api_get_result.reason)
+        else:
+            return api_get_result
 
     def get_api_parameters(self, print_params=True):
         """ Return parameter information from API """
