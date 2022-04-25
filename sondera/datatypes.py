@@ -7,7 +7,7 @@ from typing import List, Any, Optional
 import numpy as np
 import pandas as pd
 
-from sondera.utils import haversine, transform_coordinate
+from sondera.geo_utils import haversine, transform_coordinate
 
 
 class StationType(Enum):
