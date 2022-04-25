@@ -11,9 +11,10 @@ from typing import Union
 
 import pandas as pd
 import requests
+from tqdm import tqdm
 
 from ...exceptions import APIError, SonderaError
-from ...datatypes import SonderaData, StationType, Coordinate
+from ...datatypes import SonderaData, StationType, Coordinate, Station
 
 from ..parameters import parameter_patterns
 from ..parameters import ParametersMetObs as Parameters
@@ -23,6 +24,8 @@ class MetObsClient:
     _api_url = 'https://opendata-download-metobs.smhi.se/api/version/1.0'
 
     def __init__(self):
+
+
 
         self.Parameters = Parameters
 
@@ -34,11 +37,18 @@ class MetObsClient:
 
         self._api_url_template_station = (self._api_url +
                                                   '/parameter/{parameter}'
-                                                  '/station/{station}')
+                                                  '/station/{station}') # FIXME extension?
+
+        self._api_url_template_parameter = (self._api_url +
+                                                  '/parameter/{parameter}.{extension}')
 
         self.api_params_dict = self.get_api_parameters(print_params=False)
 
-        self.get_all_stations_called=False
+        # dict with key station id and list of parameters at station
+        self.stations = collections.defaultdict(list)
+        # dict with stations that include a parameter
+        self.parameter_stations = {}
+        self.get_all_stations_called = False
 
     def get_observations(self,
                          parameter: Union[Parameters, int],
@@ -223,6 +233,7 @@ class MetObsClient:
     def _create_data_obj(self, aux_df, obs_s, parameter,
                          station_md, station_name, md_str):
         # Get positions, can be several if station moved
+        # FIXME use Station dataclass
         position_history = []
         from_dates = []
         to_dates = []
@@ -230,7 +241,7 @@ class MetObsClient:
             pos_coord = Coordinate(y=pos.get('latitude'),
                                    x=pos.get('longitude'),
                                    z=pos.get('height', None),
-                                   epsg=4326)
+                                   epsg_xy=4326)
 
             pos_i = {'from': dt.datetime.utcfromtimestamp(pos['from'] / 1000),
                      'to': dt.datetime.utcfromtimestamp(pos['to'] / 1000),
@@ -261,21 +272,59 @@ class MetObsClient:
 
 
     def get_all_stations(self):
-        pass
+
+        # build two dicts, one with parameter: [Station] (Station being the class)
+        # one with station_id:parameters (parameters just being a list of the enums available)
+
         # Requires many requests to API, not available
         # Need to loop over parameters
+        # nice to store if station is active or not
         if not self.get_all_stations_called:
-            self.all_stations_dict = {}
+            print('Querying API for all stations and parameters, please wait...')
             # call get_stations_parameter
-            self.get_all_stations_called = True
+            # Get stations for each parameter
+            for param in tqdm(Parameters):
+                self.parameter_stations[param] = self.get_stations_parameter(param.value)
+                # loop over stations and add to stations dict
+                for st_p in self.parameter_stations[param]:
+                    self.stations[st_p.id].append(param)
 
-        return self.all_stations_dict
+            self.get_all_stations_called = True
 
 
     def get_stations_parameter(self, parameter):
         # Get stations where parameter is available
         # https://opendata.smhi.se/apidocs/metobs/parameter.html
-        pass
+        # return list of Station objects
+        stations = []
+
+        api_url_parameter = self._api_url_template_parameter.format(parameter=parameter,
+                                                                    extension='json')
+        api_get_parameter = self._make_request(api_url_parameter)
+        parameter_response = api_get_parameter.json()
+
+        # loop over stations that have this parameter
+        for st in parameter_response['station']:
+            st_so = Station(name=st['name'],
+                            id=st['id'],
+                            agency=st['owner'],
+                            location=Coordinate(y=st['latitude'],
+                                                x=st['longitude'],
+                                                z=st['height'],
+                                                epsg_xy=4326,
+                                                epsg_z=5613),
+                            station_type=StationType.MetStation,
+                            active_station=st['active'],
+                            active_period=[pd.to_datetime(st['from'], unit='ms',
+                                                          origin='unix'),
+                                           pd.to_datetime(st['to'], unit='ms',
+                                                          origin='unix')],
+                            last_updated=pd.to_datetime(st['updated'], unit='ms',
+                                                        origin='unix'))
+            stations.append(st_so)
+
+        return stations
+
 
     def get_periods(self):
         # get available periods for parameter and station
@@ -302,7 +351,6 @@ class MetObsClient:
         except TypeError as e:
             print(e)
             raise
-
 
     def _make_request(self, api_url):
         """ All API requests are passed through this method """
