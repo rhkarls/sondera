@@ -1,11 +1,16 @@
 """
 Geographical functions for sondera
 """
+# for type hints and cyclic imports of Coordinate
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 import geopandas
 import numpy as np
 from shapely.geometry import Point
 
-from sondera.datatypes import Coordinate
+if TYPE_CHECKING:
+    from sondera.datatypes import Coordinate
 
 
 def find_nearby_stations():
