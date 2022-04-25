@@ -42,10 +42,8 @@ class APIError(Exception):
 
     def __init__(self, status_code, message):
 
-        message_string = message.get("message", "Unknown error")
-
         self.status_code = status_code
-        self.message = message_string
+        self.message = message
 
     def __str__(self):
         return f"{self.status_code}: {self.message}"
