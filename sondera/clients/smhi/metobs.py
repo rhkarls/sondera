@@ -20,12 +20,22 @@ from ..parameters import parameter_patterns
 from ..parameters import ParametersMetObs as Parameters
 
 
+def _make_request(api_url):
+    """ All API requests are passed through this function """
+    api_get_result = requests.get(api_url)
+
+    # Check result for error
+    if api_get_result.status_code != 200:
+        raise APIError(api_get_result.status_code,
+                       api_get_result.reason)
+    else:
+        return api_get_result
+
+
 class MetObsClient:
     _api_url = 'https://opendata-download-metobs.smhi.se/api/version/1.0'
 
     def __init__(self):
-
-
 
         self.Parameters = Parameters
 
@@ -119,12 +129,12 @@ class MetObsClient:
 
         # Get station metadata
         api_url_station = self._api_url_template_station.format(**api_vars) + '.json'
-        api_get_station = self._make_request(api_url_station)
+        api_get_station = _make_request(api_url_station)
         station_md = api_get_station.json()
 
         # Get data
         api_url = self._api_url_template_data.format(**api_vars)
-        api_get_result = self._make_request(api_url)
+        api_get_result = _make_request(api_url)
 
         if api_ext == 'json':
             api_result_json = api_get_result.json()
@@ -270,7 +280,6 @@ class MetObsClient:
         # Requires many requests to API, not available. call get_all_stations
         # and get pars where station is listed
 
-
     def get_all_stations(self):
 
         # build two dicts, one with parameter: [Station] (Station being the class)
@@ -291,7 +300,6 @@ class MetObsClient:
 
             self.get_all_stations_called = True
 
-
     def get_stations_parameter(self, parameter):
         # Get stations where parameter is available
         # https://opendata.smhi.se/apidocs/metobs/parameter.html
@@ -300,7 +308,7 @@ class MetObsClient:
 
         api_url_parameter = self._api_url_template_parameter.format(parameter=parameter,
                                                                     extension='json')
-        api_get_parameter = self._make_request(api_url_parameter)
+        api_get_parameter = _make_request(api_url_parameter)
         parameter_response = api_get_parameter.json()
 
         # loop over stations that have this parameter
@@ -324,7 +332,6 @@ class MetObsClient:
             stations.append(st_so)
 
         return stations
-
 
     def get_periods(self):
         # get available periods for parameter and station
@@ -351,17 +358,6 @@ class MetObsClient:
         except TypeError as e:
             print(e)
             raise
-
-    def _make_request(self, api_url):
-        """ All API requests are passed through this method """
-        api_get_result = requests.get(api_url)
-
-        # Check result for error
-        if api_get_result.status_code != 200:
-            raise APIError(api_get_result.status_code,
-                           api_get_result.reason)
-        else:
-            return api_get_result
 
     def get_api_parameters(self, print_params=True):
         """ Return parameter information from API """
