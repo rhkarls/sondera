@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from enum import Enum, auto
 from typing import List, Any, Optional
 
-import numpy as np
 import pandas as pd
 
 from sondera.geo_utils import distance_haversine, transform_coordinate
@@ -24,28 +23,32 @@ class Coordinate:
     epsg_xy: int = None  # EPSG code for CRS for x,y coordinates
     epsg_z: int = None  # EPSG code for vertical (z) datum
 
-    def distance_to(self, other):
+    def distance_to(self, other) -> float:
+        """ Distance to other Coordinate in meters
+
+        Distance is calculated by converting booth coordinates to
+        WGS84 (epsg:4326) and then calculating Haversine distance.
+
+        Both the instance and other need epsg_xy attribute set
         """
-        Haversine distance in meter to other coordinate point for WGS84
-        Euclidean distance in CRS units for other epsg codes
-        """
-        if self.epsg_xy == 4326:  # FIXME list of wgs84 codes?
-            return haversine(self, other)
-        else:
-            return np.sqrt((other.x - self.x)**2 + (other.y - self.y)**2)
+        coord_a = self.to_wgs84()
+        coord_b = other.to_wgs84()
+
+        return distance_haversine(coord_a, coord_b)
 
     def to_wgs84(self):
+        """ Convert the 2D coordinates (x, y) to WGS84 epsg:4326 """
+        # HINT: transform_coordinate raises ValueError if epsg_xy is None
         if self.epsg_xy != 4326:
-            self.x, self.y = transform_coordinate([self.x, self.y],
-                                 epsg_in=self.epsg_xy,
-                                 epsg_out=4326)
+            coord_wgs84 = transform_coordinate(self,
+                                               epsg_out=4326)
 
-            self.epsg_xy = 4326
+            return coord_wgs84
 
 
 @dataclass
 class Station:
-
+    """ Class for measurement station"""
     name: str
     id: int
     agency: str
@@ -54,13 +57,12 @@ class Station:
     active_station: bool
     active_period: List[datetime.datetime]
     last_updated: datetime.datetime
+    station_info: dict[str, Any]
 
 
 @dataclass
 class SonderaData:
     """ General class for data"""
-    # station has coordinate, name, description, data source, agency
-    # data (dataframe)
     # some can have additional info, like catchment polygon, catchment size
     # SGU wells carry a lot of fields that are quite relevant
     station: Station

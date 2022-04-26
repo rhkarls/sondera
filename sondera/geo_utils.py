@@ -3,11 +3,12 @@ Geographical functions for sondera
 """
 # for type hints and cyclic imports of Coordinate
 from __future__ import annotations
+
+from copy import deepcopy
 from typing import TYPE_CHECKING
 
 import geopandas
 import numpy as np
-from shapely.geometry import Point
 
 if TYPE_CHECKING:
     from sondera.datatypes import Coordinate
@@ -20,14 +21,33 @@ def find_nearby_stations():
 def find_stations_in_polygon():
     raise NotImplementedError
 
-# FIXME return Coordinate object also? if so base it as a copy of coord_in
-# Also coord_in already has epsg_in defined?
-def transform_coordinate(coord_in: Coordinate, epsg_in: int, epsg_out: int):
 
-    gs_in = geopandas.GeoSeries([Point(coord_in.x, coord_in.y)], crs=epsg_in)
+def transform_coordinate(coord_in: Coordinate, epsg_out: int):
+    """ Transform a Coordinate object's 2D coordinates with epsg code
+
+    Parameters
+    ----------
+    coord_in
+    epsg_out
+
+    Returns
+    -------
+
+    """
+    if coord_in.epsg_xy is None:
+        raise ValueError('coord_in Coordinate object does not have epsg_xy set')
+
+    gs_in = geopandas.GeoSeries(geopandas.points_from_xy(x=[coord_in.x],
+                                                         y=[coord_in.y],
+                                                         crs=coord_in.epsg_xy))
     gs_out = gs_in.to_crs(epsg=epsg_out)
 
-    return gs_out.iloc[0].x, gs_out.iloc[0].y
+    coord_out = deepcopy(coord_in)
+    coord_out.x = gs_out.iloc[0].x
+    coord_out.y = gs_out.iloc[0].y
+    coord_out.epsg_xy = epsg_out
+
+    return coord_out
 
 
 def distance_euclidean(coord1: Coordinate, coord2: Coordinate) -> float:
@@ -42,8 +62,10 @@ def distance_euclidean(coord1: Coordinate, coord2: Coordinate) -> float:
         -------
         Distance between coord1 and coord2 in meters
 
+
         """
-    raise NotImplementedError
+    return np.sqrt((coord2.x - coord1.x) ** 2 + (coord2.y - coord1.y) ** 2)
+
 
 def distance_haversine(coord1: Coordinate, coord2: Coordinate) -> float:
     """Distance in meter between two spherical coordinates on Earth using
