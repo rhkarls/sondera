@@ -14,7 +14,7 @@ from typing import Union
 import pandas as pd
 import requests
 
-from ...datatypes import SonderaData, StationType, Coordinate
+from ...datatypes import DataSeries, StationType, Coordinate
 
 from ..parameters import parameter_patterns, SGULanCodes
 from ..parameters import ParametersGWLevels as Parameters

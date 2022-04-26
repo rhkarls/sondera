@@ -3,18 +3,22 @@
 Client for SMHI metobs open-data api
 """
 
+try:
+    from zoneinfo import ZoneInfo
+except ImportError:
+    from backports.zoneinfo import ZoneInfo
+
 import collections
 from io import StringIO
-# from string import Template
 import datetime as dt
-from typing import Union
+from typing import Union, List
 
 import pandas as pd
 import requests
 from tqdm import tqdm
 
 from ...exceptions import APIError, SonderaError
-from ...datatypes import SonderaData, StationType, Coordinate, Station
+from ...datatypes import DataSeries, StationType, Coordinate, Station
 
 from ..parameters import parameter_patterns
 from ..parameters import ParametersMetObs as Parameters
@@ -63,8 +67,7 @@ class MetObsClient:
     def get_observations(self,
                          parameter: Union[Parameters, int],
                          station: int,
-                         period: str,
-                         return_tz=None) -> SonderaData:
+                         period: str) -> DataSeries:
         """
         Get observations for a given parameter, station and period
         ----------
@@ -77,7 +80,6 @@ class MetObsClient:
             a combination of the two api calls.
             Note that all periods are not available for all stations/parameters.
 
-        return_tz : Not implemented
 
         Returns
         -------
@@ -109,7 +111,7 @@ class MetObsClient:
     def _api_call_observations(self,
                                parameter: Union[Parameters, int],
                                station: int,
-                               period: str) -> SonderaData:
+                               period: str) -> DataSeries:
         # extension for data
         if period.lower() == 'corrected-archive':
             api_ext = 'csv'
@@ -243,7 +245,6 @@ class MetObsClient:
     def _create_data_obj(self, aux_df, obs_s, parameter,
                          station_md, station_name, md_str):
         # Get positions, can be several if station moved
-        # FIXME use Station dataclass
         position_history = []
         from_dates = []
         to_dates = []
@@ -251,7 +252,8 @@ class MetObsClient:
             pos_coord = Coordinate(y=pos.get('latitude'),
                                    x=pos.get('longitude'),
                                    z=pos.get('height', None),
-                                   epsg_xy=4326)
+                                   epsg_xy=4326,
+                                   epsg_z=5613)
 
             pos_i = {'from': dt.datetime.utcfromtimestamp(pos['from'] / 1000),
                      'to': dt.datetime.utcfromtimestamp(pos['to'] / 1000),
@@ -261,18 +263,38 @@ class MetObsClient:
             from_dates.append(pos_i['from'])
             to_dates.append(pos_i['to'])
         pos_coord_last = position_history[-1]['position']
-        station_data = SonderaData(name=station_name,
-                                   position=pos_coord_last,
-                                   position_history=position_history,
-                                   station_type=StationType.MetStation,
-                                   data=obs_s,
-                                   aux_data=aux_df,
-                                   parameter=parameter,
-                                   metadata=md_str,
-                                   active_station=station_md['active'],
-                                   start_date=min(from_dates),
-                                   end_date=max(to_dates))
-        return station_data
+
+        station_obj = Station(name=station_name,
+                              id=int(station_md['key']),
+                              agency=station_md['owner'],
+                              position=pos_coord_last,
+                              station_type=StationType.MetStation,
+                              active_station=station_md['active'],
+                              active_period=[dt.datetime.utcfromtimestamp(station_md['from']/1000),
+                                             dt.datetime.utcfromtimestamp(station_md['to']/1000)],
+                              last_updated=dt.datetime.utcfromtimestamp(station_md['updated']/1000),
+                              station_info={},
+                              position_history=position_history)
+
+        data_obj = DataSeries(station=station_obj,
+                              data=obs_s,
+                              aux_data=aux_df,
+                              parameter=parameter,
+                              metadata=md_str,
+                              start_date=min(from_dates),
+                              end_date=max(to_dates))
+        # data_obj = SonderaData(name=station_name,
+        #                            position=pos_coord_last,
+        #                            position_history=position_history,
+        #                            station_type=StationType.MetStation,
+        #                            data=obs_s,
+        #                            aux_data=aux_df,
+        #                            parameter=parameter,
+        #                            metadata=md_str,
+        #                            active_station=station_md['active'],
+        #                            start_date=min(from_dates),
+        #                            end_date=max(to_dates))
+        return data_obj
 
     def get_parameters_station(self, station):
         # get available parameters for station
@@ -316,7 +338,7 @@ class MetObsClient:
             st_so = Station(name=st['name'],
                             id=st['id'],
                             agency=st['owner'],
-                            location=Coordinate(y=st['latitude'],
+                            position=Coordinate(y=st['latitude'],
                                                 x=st['longitude'],
                                                 z=st['height'],
                                                 epsg_xy=4326,
@@ -337,7 +359,8 @@ class MetObsClient:
         # get available periods for parameter and station
         pass
 
-    def print_parameters(self):
+    def get_parameters(self, parameter_ids: List[int] = None):
+        # return all enums or a limited enums based on integer id
         pass
 
     @staticmethod

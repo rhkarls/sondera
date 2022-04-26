@@ -52,17 +52,18 @@ class Station:
     name: str
     id: int
     agency: str
-    location: Coordinate
+    position: Coordinate
     station_type: StationType
     active_station: bool
     active_period: List[datetime.datetime]
     last_updated: datetime.datetime
     station_info: dict[str, Any]
+    position_history: Optional[List] = None
 
 
 @dataclass
-class SonderaData:
-    """ General class for data"""
+class DataSeries:
+    """ General class for observed data series"""
     # some can have additional info, like catchment polygon, catchment size
     # SGU wells carry a lot of fields that are quite relevant
     station: Station
@@ -71,5 +72,4 @@ class SonderaData:
     metadata: str
     start_date: datetime.datetime
     end_date: datetime.datetime
-    position_history: Optional[List] = None
     aux_data: Optional[pd.DataFrame] = None
