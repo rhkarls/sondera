@@ -8,17 +8,16 @@ https://www.sgu.se/produkter/geologiska-data/oppna-data/grundvatten-oppna-data/g
 import collections
 from enum import Enum
 from io import StringIO
-from string import Template
 import datetime as dt
 from typing import Union
 
 import pandas as pd
 import requests
 
-from ..datatypes import SonderaData, StationType, Coordinate
+from ...datatypes import SonderaData, StationType, Coordinate
 
-from .parameters import parameter_patterns, SGULanCodes
-from .parameters import ParametersGWLevels as Parameters
+from ..parameters import parameter_patterns, SGULanCodes
+from ..parameters import ParametersGWLevels as Parameters
 
 
 class GroundwaterLevels:
@@ -28,31 +27,30 @@ class GroundwaterLevels:
 
         #self.Parameters = Parameters
 
-        self._api_url_template_data = Template(self._api_url +
-                                               '/nivaer/station'
-                                               '/$station?format=json'
-                                               )
+        self._api_url_template_data = (self._api_url +
+                                       '/nivaer/station'
+                                       '/{station}?format=json')
 
-        self._api_url_template_data_lan = Template(self._api_url +
-                                                   '/nivaer/lan'
-                                                   '/$lancode?format=json')
+        self._api_url_template_data_lan = (self._api_url +
+                                           '/nivaer/lan'
+                                           '/{lancode}?format=json')
 
-        self._api_url_template_stations_lan = Template(self._api_url +
-                                                       '/stationer'
-                                                       '/$lancode?format=json')
+        self._api_url_template_stations_lan = (self._api_url +
+                                               '/stationer'
+                                               '/{lancode}?format=json')
 
         # self.api_params_dict = self.get_api_parameters(print_params=False)
 
     def get_station_data(self,
                          station_code: str,
-                         parameter: Parameters=Parameters.LevelBelowGroundSurface):
+                         parameter: Parameters = Parameters.LevelBelowGroundSurface):
         """ Get data for a given station / groundwater well
         Returns data for LevelBelowGroundSurface if not provided
         """
 
         api_vars = {'station': station_code}
 
-        api_url_data = self._api_url_template_data.substitute(api_vars)
+        api_url_data = self._api_url_template_data.format(api_vars)
         api_get_data = requests.get(api_url_data)
         api_data = api_get_data.json()
         data_json = api_data['features'][0]['properties']['Mätningar']
@@ -86,15 +84,15 @@ class GroundwaterLevels:
 
         api_vars = {'lancode': lan_code.value}
 
-        api_url_stations = self._api_url_template_stations_lan.substitute(api_vars)
+        api_url_stations = self._api_url_template_stations_lan.format(api_vars)
         api_get_stations = requests.get(api_url_stations)
         stations = api_get_stations.json()
 
         stations_df = pd.DataFrame()
         for s in stations['features']:
             try:
-                s_x = s.get('geometry', {}).get('coordinates',[None, None])[1]
-                s_y = s.get('geometry', {}).get('coordinates',[None, None])[0]
+                s_x = s.get('geometry', {}).get('coordinates', [None, None])[1]
+                s_y = s.get('geometry', {}).get('coordinates', [None, None])[0]
             except AttributeError:
                 s_x = None
                 s_y = None
