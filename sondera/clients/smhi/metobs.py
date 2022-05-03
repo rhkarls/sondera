@@ -222,7 +222,7 @@ class MetObsClient:
         swe_par_name = self.api_params_dict[parameter.value]['title']
         obs_s = csv_df[swe_par_name]
 
-        aux_df = csv_df[set(csv_df.keys()) - {swe_par_name}]
+        aux_df = csv_df[list(set(csv_df.keys()) - {swe_par_name})]
         # Rename 'Kvalitet' to 'quality' in aux data as in other json data
         aux_df = aux_df.rename({'Kvalitet': 'quality'}, axis=1)
 
