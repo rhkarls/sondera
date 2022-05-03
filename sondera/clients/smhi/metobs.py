@@ -13,7 +13,6 @@ except ImportError:
               'is required. Update python, or install backports.zoneinfo')
         raise
 
-
 import collections
 from io import StringIO
 import datetime as dt
@@ -56,11 +55,11 @@ class MetObsClient:
                                        '/data.{extension}')
 
         self._api_url_template_station = (self._api_url +
-                                                  '/parameter/{parameter}'
-                                                  '/station/{station}') # FIXME extension?
+                                          '/parameter/{parameter}'
+                                          '/station/{station}')  # FIXME extension?
 
         self._api_url_template_parameter = (self._api_url +
-                                                  '/parameter/{parameter}.{extension}')
+                                            '/parameter/{parameter}.{extension}')
 
         self.api_params_dict = self.get_api_parameters(print_params=False)
 
@@ -276,9 +275,9 @@ class MetObsClient:
                               position=pos_coord_last,
                               station_type=StationType.MetStation,
                               active_station=station_md['active'],
-                              active_period=[dt.datetime.utcfromtimestamp(station_md['from']/1000),
-                                             dt.datetime.utcfromtimestamp(station_md['to']/1000)],
-                              last_updated=dt.datetime.utcfromtimestamp(station_md['updated']/1000),
+                              active_period=[dt.datetime.utcfromtimestamp(station_md['from'] / 1000),
+                                             dt.datetime.utcfromtimestamp(station_md['to'] / 1000)],
+                              last_updated=dt.datetime.utcfromtimestamp(station_md['updated'] / 1000),
                               station_info={},
                               position_history=position_history)
 
