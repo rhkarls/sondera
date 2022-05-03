@@ -6,7 +6,13 @@ Client for SMHI metobs open-data api
 try:
     from zoneinfo import ZoneInfo
 except ImportError:
-    from backports.zoneinfo import ZoneInfo
+    try:
+        from backports.zoneinfo import ZoneInfo
+    except ImportError:
+        print('ZoneInfo, included in the standard library for python => 3.9, '
+              'is required. Update python, or install backports.zoneinfo')
+        raise
+
 
 import collections
 from io import StringIO
