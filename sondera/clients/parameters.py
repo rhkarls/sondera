@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Parameters and related for the different APIs
+Parameters and related for the various APIs
 
 """
 from enum import Enum
@@ -90,10 +90,16 @@ class SGULanCodes(Enum):
     Orebro = '18'
     Ostergotland = '05'
 
+
 # Patterns to more safely find start of CSV data from SMHI MetObs, and for parsing date and time
 # TODO timestamp_type might not be needed
 # move else where, own file
 # TODO str_pattern doesnt have to be unique, just to find the line in each csv str
+# get str pattern by looking up data:
+# WindDirection / 3. find a station first
+# https://opendata-download-metobs.smhi.se/api/version/latest/parameter/3.json
+# https://opendata-download-metobs.smhi.se/api/version/1.0/parameter/3/station/154860/period/corrected-archive/data.csv
+
 parameter_patterns = {
     ParametersMetObs.TemperatureAirHour: {'str_pattern': 'Datum;Tid (UTC);Lufttemperatur',
                                           'use_cols': [0, 1, 2, 3],
@@ -102,6 +108,10 @@ parameter_patterns = {
         'str_pattern': 'Från Datum Tid (UTC);Till Datum Tid (UTC);Representativt dygn',
         'use_cols': [2, 3, 4],
         'timestamp_type': 'ref'},
+    ParametersMetObs.WindDirection: {
+        'str_pattern': 'Datum;Tid (UTC);Vindriktning',
+        'use_cols': [0, 1, 2, 3],
+        'timestamp_type': 'date_time'},
     ParametersMetObs.PrecipitationDayAt06: {
         'str_pattern': 'Från Datum Tid (UTC);Till Datum Tid (UTC);Representativt dygn',
         'use_cols': [2, 3, 4],
@@ -115,6 +125,9 @@ parameter_patterns = {
     ParametersMetObs.WindSpeed: {'str_pattern': 'Datum;Tid (UTC);Vindhastighet',
                                  'use_cols': [0, 1, 2, 3],
                                  'timestamp_type': 'date_time'},
+
+
+
     ParametersHydroObs.Discharge: {'str_pattern': 'Datum (svensk sommartid);Vattenföring',
                                    'use_cols': [0, 1, 2],
                                    'timestamp_type': 'date'}}  # NOTE ONLY HYDROOBS CAN HAVE DATE ATM, CHANGE IN CODE NEEDED IF OTHER HAVE IT TOO
