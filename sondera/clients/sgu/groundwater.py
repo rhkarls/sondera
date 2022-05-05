@@ -16,7 +16,7 @@ import requests
 
 from ...datatypes import DataSeries, StationType, Coordinate, Station
 
-from ..parameters import parameter_patterns, SGULanCodes
+from ..parameters import SGULanCodes
 from ..parameters import ParametersGWLevels as Parameters
 
 
@@ -81,18 +81,18 @@ class GroundwaterLevels:
         station_md['active'] = (pd.Timestamp.today() - obs_s.index.max()).days < 30
         station_md['active_period'] = [obs_s.index.min(), obs_s.index.max()]
 
-        # FIXME station can have key 'referensniva_for_roroverkant_m_o.h.' or
-        #                            'referensniva_for_roroverkant_m.o.h.'
-        # only one will be present for each station
-        # Also fix below
         # TODO: can lancode be taken from kommunkod? first two characters
-        # can be used to query for stations around
+        # can be used to query for stations nearby
 
+        # FIXME DRY: code block repeated
+        # station can have key 'referensniva_for_roroverkant_m_o.h.' or
+        #                      'referensniva_for_roroverkant_m.o.h.'
+        # for datum level, only one can be present for each station
+        # only one will be present for each station
         ref_datum_level_key = list(
             set(['referensniva_for_roroverkant_m_o.h.', 'referensniva_for_roroverkant_m.o.h.']).intersection(
                 api_data['features'][0]['properties'].keys()))[0]
 
-        # FIXME DRY: code block repeated
         station_md['station_info'] = {
             'start_date': api_data['features'][0]['properties'].get('startdatum_for_matning', None),
             'aquifer_type': api_data['features'][0]['properties'].get('akvifertyp', None),
@@ -112,11 +112,11 @@ class GroundwaterLevels:
 
     def get_all_data_lan(self, lan_code: Union[SGULanCodes, str]):
         # can probably share a lot with above get_station_data
-        pass
+        raise NotImplementedError
 
     def get_station_info_lan(self, lan_code: Union[SGULanCodes, str]):
         """ Get all stations and station metadata for a given län"""
-
+        # TODO return as dataframe and/or dict of Station objects?
         if isinstance(lan_code, str):
             lan_code = SGULanCodes(lan_code)
 
@@ -135,6 +135,14 @@ class GroundwaterLevels:
                 s_x = None
                 s_y = None
 
+            # station can have key 'referensniva_for_roroverkant_m_o.h.' or
+            #                      'referensniva_for_roroverkant_m.o.h.'
+            # for datum level, only one can be present for each station
+            # only one will be present for each station
+            ref_datum_level_key = list(
+                set(['referensniva_for_roroverkant_m_o.h.', 'referensniva_for_roroverkant_m.o.h.']).intersection(
+                    s['properties'].keys()))[0]
+
             s_d = {'X': s_x,
                    'Y': s_y,
                    'code': s['properties'].get('omrade-_och_stationsnummer', None),
@@ -142,7 +150,7 @@ class GroundwaterLevels:
                    'start_date': s['properties'].get('startdatum_for_matning', None),
                    'aquifer_type': s['properties'].get('akvifertyp', None),
                    'topographic_position': s['properties'].get('topografiskt_lage', None),
-                   'reference_datum_well_top': s['properties'].get('referensniva_for_roroverkant_m.o.h.', None),
+                   'reference_datum_well_top': s['properties'].get(ref_datum_level_key, None),
                    'well_elev_above_ground': s['properties'].get('rorhojd_ovan_mark_m', None),
                    'well_length': s['properties'].get('total_rorlangd_m', None),
                    'municipality': s['properties'].get('kommunkod', None),
