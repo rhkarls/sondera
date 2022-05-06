@@ -8,6 +8,8 @@ Inherits from metobs
 
 import datetime as dt
 
+import pandas as pd
+
 from ..parameters import ParametersHydroObs as Parameters
 from .metobs import MetObsClient
 from ...datatypes import Coordinate, DataSeries, StationType, Station
@@ -32,8 +34,10 @@ class HydroObsClient(MetObsClient):
                               position=pos_coord,
                               station_type=StationType.HydroStation,
                               active_station=station_md['active'],
-                              active_period=[dt.datetime.utcfromtimestamp(station_md['from']/1000),
-                                             dt.datetime.utcfromtimestamp(station_md['to']/1000)],
+                              active_period=[pd.to_datetime(station_md['from'], unit='ms',
+                                                            origin='unix'),
+                                             pd.to_datetime(station_md['to'], unit='ms',
+                                                            origin='unix')],
                               last_updated=None,
                               station_info={})
 

@@ -260,8 +260,8 @@ class MetObsClient:
                                    epsg_xy=4326,
                                    epsg_z=5613)
 
-            pos_i = {'from': dt.datetime.utcfromtimestamp(pos['from'] / 1000),
-                     'to': dt.datetime.utcfromtimestamp(pos['to'] / 1000),
+            pos_i = {'from': pd.to_datetime(pos['from'], unit='ms', origin='unix'),
+                     'to': pd.to_datetime(pos['to'], unit='ms', origin='unix'),
                      'position': pos_coord}
 
             position_history.append(pos_i)
@@ -275,9 +275,9 @@ class MetObsClient:
                               position=pos_coord_last,
                               station_type=StationType.MetStation,
                               active_station=station_md['active'],
-                              active_period=[dt.datetime.utcfromtimestamp(station_md['from'] / 1000),
-                                             dt.datetime.utcfromtimestamp(station_md['to'] / 1000)],
-                              last_updated=dt.datetime.utcfromtimestamp(station_md['updated'] / 1000),
+                              active_period=[pd.to_datetime(station_md['from'], unit='ms', origin='unix'),
+                                             pd.to_datetime(station_md['to'], unit='ms', origin='unix')],
+                              last_updated=pd.to_datetime(station_md['updated'], unit='ms', origin='unix'),
                               station_info={},
                               position_history=position_history)
 
