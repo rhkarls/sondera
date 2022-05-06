@@ -64,7 +64,7 @@ class GroundwaterLevels:
         swe_par_key = parameter.value
         obs_s = data_df[swe_par_key].copy()
         obs_s.name = parameter.name
-        aux_df = data_df[set(data_df.keys()) - {swe_par_key}]
+        aux_df = data_df[list(set(data_df.keys()) - {swe_par_key})]
 
         # create metadata and station data
         # TODO

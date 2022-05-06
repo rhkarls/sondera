@@ -184,7 +184,7 @@ class MetObsClient:
 
         df_values = df_values.set_index('timestamp')
         obs_s = df_values['value'].copy()
-        aux_df = df_values[set(df_values.keys()) - {'value'}]
+        aux_df = df_values[list(set(df_values.keys()) - {'value'})]
 
         station_name = api_result_json['station']['name']
 
