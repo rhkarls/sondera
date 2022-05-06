@@ -88,7 +88,7 @@ class MetObsClient:
 
         Returns
         -------
-        SonderaData object
+        DataSeries object
         """
 
         # 'corrected-archive-latest-months', need to move the client call away

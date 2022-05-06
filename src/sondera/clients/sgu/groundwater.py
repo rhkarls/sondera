@@ -41,7 +41,7 @@ class GroundwaterLevels:
 
         # self.api_params_dict = self.get_api_parameters(print_params=False)
 
-    def get_station_data(self,
+    def get_observations(self,
                          station_code: str,
                          parameter: Parameters = Parameters.LevelBelowGroundSurface):
         """ Get data for a given station / groundwater well
@@ -110,11 +110,11 @@ class GroundwaterLevels:
 
         return station_data
 
-    def get_all_data_lan(self, lan_code: Union[SGULanCodes, str]):
+    def get_observations_lan(self, lan_code: Union[SGULanCodes, str]):
         # can probably share a lot with above get_station_data
         raise NotImplementedError
 
-    def get_station_info_lan(self, lan_code: Union[SGULanCodes, str]):
+    def get_all_stations_lan(self, lan_code: Union[SGULanCodes, str]):
         """ Get all stations and station metadata for a given län"""
         # TODO return as dataframe and/or dict of Station objects?
         if isinstance(lan_code, str):
