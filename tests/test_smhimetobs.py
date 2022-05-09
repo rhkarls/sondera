@@ -23,6 +23,11 @@ def test_get_observations(api_client, parameter, period):
     api_data = api_client.get_observations(parameter, 159880, period)
     assert len(api_data.data) > 0
 
+# test reading metadata from a station with old dates (negative posix)
+def test_get_observations_old_timestamp(api_client):
+    api_data = api_client.get_observations(5, 180960, 'latest-months')
+    assert len(api_data.data) > 0
+
 # test that csv pattern parsing works on api data
 @pytest.mark.parametrize("parameter, station", [
     (1, 159880),
