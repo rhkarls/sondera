@@ -11,7 +11,7 @@ import geopandas
 import numpy as np
 
 if TYPE_CHECKING:
-    from sondera.datatypes import Coordinate
+    from .datatypes import Coordinate
 
 
 def find_nearby_stations():

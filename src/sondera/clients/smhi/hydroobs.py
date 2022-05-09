@@ -6,12 +6,10 @@ Inherits from metobs
 # All dates in the JSON answers are in Unix time stamp. Timezone UTC  # FIXME
 # Allow for returning data in different timezone ?
 
-import datetime as dt
-
 import pandas as pd
 
-from ..parameters import ParametersHydroObs as Parameters
 from .metobs import MetObsClient
+from ..parameters import ParametersHydroObs as Parameters
 from ...datatypes import Coordinate, DataSeries, StationType, Station
 
 

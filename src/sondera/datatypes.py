@@ -6,7 +6,7 @@ from typing import List, Any, Optional
 
 import pandas as pd
 
-from sondera.geo_utils import distance_haversine, transform_coordinate
+from .geo_utils import distance_haversine, transform_coordinate
 
 
 class StationType(Enum):
