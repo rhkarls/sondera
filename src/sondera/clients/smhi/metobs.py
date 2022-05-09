@@ -34,8 +34,16 @@ def _make_request(api_url):
 
     # Check result for error
     if api_get_result.status_code != 200:
+        if api_get_result.status_code == 404:
+            message = (api_get_result.reason +
+                       ". This probably means that either the station, parameter "
+                       "and/or period is not valid. Note that some stations do not have "
+                       "all periods available.")
+        else:
+            message = api_get_result.reason
+
         raise APIError(api_get_result.status_code,
-                       api_get_result.reason)
+                       message)
     else:
         return api_get_result
 
