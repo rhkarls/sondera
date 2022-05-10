@@ -24,8 +24,12 @@ def api_client():
 def test_get_observations(api_client, parameter, period):
     api_data = api_client.get_observations(parameter, 159880, period)
     assert len(api_data.data) > 0
+
     assert pd.api.types.is_numeric_dtype(api_data.data)
     assert pd.api.types.is_datetime64_dtype(api_data.data.index)
+
+    assert not api_data.data.index.duplicated().any()
+    assert api_data.data.index.is_monotonic_increasing
 
 # test reading metadata from a station with old dates (negative posix)
 def test_get_observations_old_timestamp(api_client):
