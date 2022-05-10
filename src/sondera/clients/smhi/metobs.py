@@ -178,7 +178,7 @@ class MetObsClient:
         return station_data
 
     def _json_to_dataframe(self, api_result_json, parameter):
-        # below here to other function
+        """ parse json data to DataFrame """
         df_values = pd.DataFrame(api_result_json['value'])
 
         if parameter_patterns[parameter]['timestamp_type'] in ['date', 'date_time']:
@@ -191,6 +191,9 @@ class MetObsClient:
 
         df_values = df_values.set_index('timestamp')
         obs_s = df_values['value'].copy()
+        if not pd.api.types.is_numeric_dtype(obs_s):
+            obs_s = pd.to_numeric(obs_s)
+
         aux_df = df_values[list(set(df_values.keys()) - {'value'})]
 
         station_name = api_result_json['station']['name']

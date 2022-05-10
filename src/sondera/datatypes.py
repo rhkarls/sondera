@@ -2,7 +2,7 @@
 import datetime
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import List, Any, Optional
+from typing import List, Any, Optional, Union
 
 import pandas as pd
 
@@ -67,7 +67,7 @@ class DataSeries:
     # some can have additional info, like catchment polygon, catchment size
     # SGU wells carry a lot of fields that are quite relevant
     station: Station
-    data: pd.Series
+    data: "pd.Series[Union[int, float]]"
     parameter: Enum
     metadata: str
     start_date: datetime.datetime
