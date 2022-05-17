@@ -10,9 +10,11 @@ import pytest
 from sondera.clients.smhi import ParametersMetObs
 from sondera.clients.smhi import MetObsClient
 
+
 @pytest.fixture(scope="module")
 def api_client():
     return MetObsClient()
+
 
 @pytest.mark.parametrize("parameter, period", [
     (2, 'latest-day'),
@@ -31,19 +33,31 @@ def test_get_observations(api_client, parameter, period):
     assert not api_data.data.index.duplicated().any()
     assert api_data.data.index.is_monotonic_increasing
 
+
 # test reading metadata from a station with old dates (negative posix)
 def test_get_observations_old_timestamp(api_client):
     api_data = api_client.get_observations(5, 180960, 'latest-months')
     assert len(api_data.data) > 0
 
+
 # test that csv parsing works on api data
+# 68560 Hoburg A, active from 2009, has many of the parameters
+# 68545 Hoburg Sol, active from 2012
+# 78320 Mästerby, active from 2016, snow measurements
 @pytest.mark.parametrize("parameter, station", [
-    (1, 159880),
-    (2, 159880),
-    (3, 159880),
-    (4, 159880)
+    (1, 68560),
+    (2, 68560),
+    (3, 68560),
+    (4, 68560),
+    (5, 68560),
+    (6, 68560),
+    (7, 68560),
+    (8, 78320),
+    (9, 68560),
+    (10, 68545),
+    (40, 78320),
 ])
 def test_csv_patterns(api_client, parameter, station):
     period = 'corrected-archive'
-    api_data = api_client.get_observations(parameter, 159880, period)
+    api_data = api_client.get_observations(parameter, station, period)
     assert len(api_data.data) > 0

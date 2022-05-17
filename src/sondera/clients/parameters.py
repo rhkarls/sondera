@@ -8,14 +8,14 @@ from enum import Enum
 
 class ParametersHydroObs(Enum):
     """
-    Numbers match API parameters
+    Numbers match API integer parameter ids
 
     """
     Discharge = 1  # Vattenföring, dygn
 
 
 class ParametersMetObs(Enum):
-    """ Numbers match API parameters
+    """ Numbers match API integer parameter ids
     For values that are coded:
     https://opendata.smhi.se/apidocs/metobs/codes.html
     """
@@ -100,7 +100,7 @@ class SGULanCodes(Enum):
 # https://opendata-download-metobs.smhi.se/api/version/latest/parameter/3.json
 # https://opendata-download-metobs.smhi.se/api/version/1.0/parameter/3/station/154860/period/corrected-archive/data.csv
 
-parameter_patterns = {
+smhi_parameter_patterns = {
     ParametersMetObs.TemperatureAirHour: {'str_pattern': 'Datum;Tid (UTC);Lufttemperatur',
                                           'use_cols': [0, 1, 2, 3],
                                           'timestamp_type': 'date_time'},
@@ -112,43 +112,57 @@ parameter_patterns = {
         'str_pattern': 'Datum;Tid (UTC);Vindriktning',
         'use_cols': [0, 1, 2, 3],
         'timestamp_type': 'date_time'},
+    ParametersMetObs.WindSpeed: {'str_pattern': 'Datum;Tid (UTC);Vindhastighet',
+                                 'use_cols': [0, 1, 2, 3],
+                                 'timestamp_type': 'date_time'},
     ParametersMetObs.PrecipitationDayAt06: {
         'str_pattern': 'Från Datum Tid (UTC);Till Datum Tid (UTC);Representativt dygn',
         'use_cols': [2, 3, 4],
         'timestamp_type': 'ref'},
+    ParametersMetObs.RelativeHumidity: {
+        'str_pattern': 'Datum;Tid (UTC);Relativ Luftfuktighet',
+        'use_cols': [0, 1, 2, 3],
+        'timestamp_type': 'date_time'},
+    ParametersMetObs.PrecipitationHour: {
+        'str_pattern': 'Datum;Tid (UTC);Nederbördsmängd',
+        'use_cols': [0, 1, 2, 3],
+        'timestamp_type': 'date_time'},
     ParametersMetObs.SnowDepth: {'str_pattern': 'Datum;Tid (UTC);Snödjup',
                                  'use_cols': [0, 1, 2, 3],
                                  'timestamp_type': 'date_time'},
+    ParametersMetObs.PressureAir: {
+        'str_pattern': 'Datum;Tid (UTC);Lufttryck',
+        'use_cols': [0, 1, 2, 3],
+        'timestamp_type': 'date_time'},
+    ParametersMetObs.SunshineDuration: {
+        'str_pattern': 'Datum;Tid (UTC);Solskenstid',
+        'use_cols': [0, 1, 2, 3],
+        'timestamp_type': 'date_time'},
     ParametersMetObs.GroundConditions: {'str_pattern': 'Datum;Tid (UTC);Markens tillstånd',
                                         'use_cols': [0, 1, 2, 3],
                                         'timestamp_type': 'date_time'},
-    ParametersMetObs.WindSpeed: {'str_pattern': 'Datum;Tid (UTC);Vindhastighet',
-                                 'use_cols': [0, 1, 2, 3],
-                                 'timestamp_type': 'date_time'},
-
-
 
     ParametersHydroObs.Discharge: {'str_pattern': 'Datum (svensk sommartid);Vattenföring',
                                    'use_cols': [0, 1, 2],
                                    'timestamp_type': 'date'}}  # NOTE ONLY HYDROOBS CAN HAVE DATE ATM, CHANGE IN CODE NEEDED IF OTHER HAVE IT TOO
 
-groundcondition_codes = {0: 'Torr (utan sprickor eller nämnvärd mängd stoft eller lös sand)',
-                         1: 'Fuktig',
-                         2: 'Våt (större eller mindre vattensamlingar förekommer)',
-                         3: 'Översvämmad',
-                         4: 'Frusen',
-                         5: 'Täckt av glattis',
-                         6: 'Täckt av löst torrt stoft eller lös torr sand – som inte helt täcker markytan',
-                         7: 'Täckt av löst torrt stoft eller lös torr sand – i ett tunt lager som helt täcker markytan',
-                         8: 'Täckt av löst torrt stoft eller lös torr sand – i ett måttligt eller tjockt lager som helt täcker markytan',
-                         9: 'Extremt torr med sprickor',
-                         10: 'Huvudsakligen täckt av is',
-                         11: 'Delvis eller helt täckt av packad eller våt snö – till mindre än hälften',
-                         12: 'Delvis eller helt täckt av packad eller våt snö – till minst hälften men ej helt',
-                         13: 'Delvis eller helt täckt av packad eller våt snö – helt och i ett jämnt lager',
-                         14: 'Delvis eller helt täckt av packad eller våt snö – helt och i ett ojämnt lager',
-                         15: 'Delvis eller helt täckt av lös och torr snö – till mindre än hälften',
-                         16: 'Delvis eller helt täckt av lös och torr snö – till minst hälften men ej helt',
-                         17: 'Delvis eller helt täckt av lös och torr snö – helt och i ett jämnt lager',
-                         18: 'Delvis eller helt täckt av lös och torr snö – helt och i ett ojämnt lager',
-                         19: 'Helt täckt av snö med höga drivor'}
+smhi_groundcondition_codes = {0: 'Torr (utan sprickor eller nämnvärd mängd stoft eller lös sand)',
+                              1: 'Fuktig',
+                              2: 'Våt (större eller mindre vattensamlingar förekommer)',
+                              3: 'Översvämmad',
+                              4: 'Frusen',
+                              5: 'Täckt av glattis',
+                              6: 'Täckt av löst torrt stoft eller lös torr sand – som inte helt täcker markytan',
+                              7: 'Täckt av löst torrt stoft eller lös torr sand – i ett tunt lager som helt täcker markytan',
+                              8: 'Täckt av löst torrt stoft eller lös torr sand – i ett måttligt eller tjockt lager som helt täcker markytan',
+                              9: 'Extremt torr med sprickor',
+                              10: 'Huvudsakligen täckt av is',
+                              11: 'Delvis eller helt täckt av packad eller våt snö – till mindre än hälften',
+                              12: 'Delvis eller helt täckt av packad eller våt snö – till minst hälften men ej helt',
+                              13: 'Delvis eller helt täckt av packad eller våt snö – helt och i ett jämnt lager',
+                              14: 'Delvis eller helt täckt av packad eller våt snö – helt och i ett ojämnt lager',
+                              15: 'Delvis eller helt täckt av lös och torr snö – till mindre än hälften',
+                              16: 'Delvis eller helt täckt av lös och torr snö – till minst hälften men ej helt',
+                              17: 'Delvis eller helt täckt av lös och torr snö – helt och i ett jämnt lager',
+                              18: 'Delvis eller helt täckt av lös och torr snö – helt och i ett ojämnt lager',
+                              19: 'Helt täckt av snö med höga drivor'}

@@ -24,7 +24,7 @@ from tqdm import tqdm
 from ...exceptions import APIError, SonderaError
 from ...datatypes import DataSeries, StationType, Coordinate, Station
 
-from ..parameters import parameter_patterns
+from ..parameters import smhi_parameter_patterns
 from ..parameters import ParametersMetObs as Parameters
 
 
@@ -181,11 +181,11 @@ class MetObsClient:
         """ parse json data to DataFrame """
         df_values = pd.DataFrame(api_result_json['value'])
 
-        if parameter_patterns[parameter]['timestamp_type'] in ['date', 'date_time']:
+        if smhi_parameter_patterns[parameter]['timestamp_type'] in ['date', 'date_time']:
             df_values['timestamp'] = pd.to_datetime(df_values['date'], unit='ms',
                                                     origin='unix')  # TODO set timezone
             df_values = df_values.drop('date', axis=1)
-        elif parameter_patterns[parameter]['timestamp_type'] == 'ref':
+        elif smhi_parameter_patterns[parameter]['timestamp_type'] == 'ref':
             df_values['timestamp'] = pd.to_datetime(df_values['ref'])  # TODO set timezone
             df_values = df_values.drop('ref', axis=1)
 
@@ -205,7 +205,7 @@ class MetObsClient:
     def _csv_to_dataframe(self, api_content_decoded, parameter):
         # find csv data line
         csv_data_line = self._find_csv_data_line(api_content_decoded,
-                                                 parameter_patterns[parameter]['str_pattern'])
+                                                 smhi_parameter_patterns[parameter]['str_pattern'])
 
         if csv_data_line is None:
             raise SonderaError(message='String pattern for parsing csv not matched',
@@ -216,20 +216,20 @@ class MetObsClient:
                              sep=';',
                              header=0,
                              skiprows=csv_data_line,
-                             usecols=parameter_patterns[parameter]['use_cols'],
+                             usecols=smhi_parameter_patterns[parameter]['use_cols'],
                              index_col=False)
 
         # handle the various formats date and time is provided in
         # TODO might be able to avoid 'timestamp_type' if there is a clear system
         # i.e. if first key is 'Datum', 'Datum (svensk sommartid)', or 'Representativt dygn'
-        if parameter_patterns[parameter]['timestamp_type'] in ['date_time']:
+        if smhi_parameter_patterns[parameter]['timestamp_type'] in ['date_time']:
             csv_df['timestamp'] = pd.to_datetime(csv_df['Datum'] + ' '
                                                  + csv_df['Tid (UTC)'])
             csv_df = csv_df.drop(['Datum', 'Tid (UTC)'], axis=1)
-        elif parameter_patterns[parameter]['timestamp_type'] in ['date']:
+        elif smhi_parameter_patterns[parameter]['timestamp_type'] in ['date']:
             csv_df['timestamp'] = pd.to_datetime(csv_df['Datum (svensk sommartid)'])
             csv_df = csv_df.drop(['Datum (svensk sommartid)'], axis=1)
-        elif parameter_patterns[parameter]['timestamp_type'] in ['ref']:
+        elif smhi_parameter_patterns[parameter]['timestamp_type'] in ['ref']:
             csv_df['timestamp'] = pd.to_datetime(csv_df['Representativt dygn'])
             csv_df = csv_df.drop(['Representativt dygn'], axis=1)
 
