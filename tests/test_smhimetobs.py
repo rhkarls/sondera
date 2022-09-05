@@ -55,6 +55,16 @@ def test_get_observations_old_timestamp(api_client):
     (8, 78320),
     (9, 68560),
     (10, 68545),
+    (11, 68545),
+    (12, 68560),
+    (13, 68560),
+    (14, 68560),
+    (15, 97280),
+    (16, 68560),
+    (17, 78320),
+    (18, 68560),
+    (19, 68560),
+    (20, 68560),
     (40, 78320),
 ])
 def test_csv_patterns(api_client, parameter, station):

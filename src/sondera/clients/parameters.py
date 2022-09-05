@@ -35,8 +35,8 @@ class ParametersMetObs(Enum):
     Precipitation15min = 14  # Nederbördsmängd, summa 15 min, 4 gånger/tim
     PrecipitationIntensityMax15min = 15  # Nederbördsintensitet, max under 15 min, 4 gånger/tim
     Cloudiness = 16  # Total molnmängd, momentanvärde, 1 gång/tim
-    PrecipitationAt06At18 = 17  # Nederbörd, 2 gånger/dygn, kl 06 och 18
-    PrecipitationDayAt18 = 18  # Nederbörd, 1 gång/dygn, kl 18
+    PrecipitationTypeAt06And18 = 17  # Nederbörd, 2 gånger/dygn, kl 06 och 18
+    PrecipitationTypeDayAt06 = 18  # Nederbörd, 1 gång/dygn, kl 06
     TemperatureAirMin = 19  # Lufttemperatur, min, 1 gång per dygn
     TemperatureAirMax = 20  # Lufttemperatur, max, 1 gång per dygn
     WindSpeedGust = 21  # Byvind, max, 1 gång/tim
@@ -95,10 +95,10 @@ class SGULanCodes(Enum):
 # TODO timestamp_type might not be needed
 # move else where, own file
 # TODO str_pattern doesnt have to be unique, just to find the line in each csv str
+#       Only a few (2-3?) different formats
 # get str pattern by looking up data:
-# WindDirection / 3. find a station first
 # https://opendata-download-metobs.smhi.se/api/version/latest/parameter/3.json
-# https://opendata-download-metobs.smhi.se/api/version/1.0/parameter/3/station/154860/period/corrected-archive/data.csv
+# then click on a station corrected-archive
 
 smhi_parameter_patterns = {
     ParametersMetObs.TemperatureAirHour: {'str_pattern': 'Datum;Tid (UTC);Lufttemperatur',
@@ -138,6 +138,46 @@ smhi_parameter_patterns = {
         'str_pattern': 'Datum;Tid (UTC);Solskenstid',
         'use_cols': [0, 1, 2, 3],
         'timestamp_type': 'date_time'},
+    ParametersMetObs.RadiationGlobal: {
+        'str_pattern': 'Datum;Tid (UTC);Global Irradians',
+        'use_cols': [0, 1, 2, 3],
+        'timestamp_type': 'date_time'},
+    ParametersMetObs.Visibility: {
+        'str_pattern': 'Datum;Tid (UTC);Sikt',
+        'use_cols': [0, 1, 2, 3],
+        'timestamp_type': 'date_time'},
+    ParametersMetObs.CurrentWeather: {
+        'str_pattern': 'Datum;Tid (UTC);Rådande väder',
+        'use_cols': [0, 1, 2, 3],
+        'timestamp_type': 'date_time'},
+    ParametersMetObs.Precipitation15min: {
+        'str_pattern': 'Datum;Tid (UTC);Nederbördsmängd',
+        'use_cols': [0, 1, 2, 3],
+        'timestamp_type': 'date_time'},
+    ParametersMetObs.PrecipitationIntensityMax15min: {
+        'str_pattern': 'Datum;Tid (UTC);Nederbördsintensitet',
+        'use_cols': [0, 1, 2, 3],
+        'timestamp_type': 'date_time'},
+    ParametersMetObs.Cloudiness: {
+        'str_pattern': 'Datum;Tid (UTC);Total molnmängd',
+        'use_cols': [0, 1, 2, 3],
+        'timestamp_type': 'date_time'},
+    ParametersMetObs.PrecipitationTypeAt06And18: {
+        'str_pattern': 'Datum;Tid (UTC);Nederbörd',
+        'use_cols': [0, 1, 2, 3],
+        'timestamp_type': 'date_time'},
+    ParametersMetObs.PrecipitationTypeDayAt06: {
+        'str_pattern': 'Från Datum Tid (UTC);Till Datum Tid (UTC);Representativt dygn;Nederbörd',
+        'use_cols': [2, 3, 4],
+        'timestamp_type': 'ref'},
+    ParametersMetObs.TemperatureAirMin: {
+        'str_pattern': 'Från Datum Tid (UTC);Till Datum Tid (UTC);Representativt dygn;Lufttemperatur',
+        'use_cols': [2, 3, 4],
+        'timestamp_type': 'ref'},
+    ParametersMetObs.TemperatureAirMax: {
+        'str_pattern': 'Från Datum Tid (UTC);Till Datum Tid (UTC);Representativt dygn;Lufttemperatur',
+        'use_cols': [2, 3, 4],
+        'timestamp_type': 'ref'},
     ParametersMetObs.GroundConditions: {'str_pattern': 'Datum;Tid (UTC);Markens tillstånd',
                                         'use_cols': [0, 1, 2, 3],
                                         'timestamp_type': 'date_time'},
@@ -145,6 +185,11 @@ smhi_parameter_patterns = {
     ParametersHydroObs.Discharge: {'str_pattern': 'Datum (svensk sommartid);Vattenföring',
                                    'use_cols': [0, 1, 2],
                                    'timestamp_type': 'date'}}  # NOTE ONLY HYDROOBS CAN HAVE DATE ATM, CHANGE IN CODE NEEDED IF OTHER HAVE IT TOO
+
+
+# SMHI:
+# Rådande väder
+# Moln mängd
 
 smhi_groundcondition_codes = {0: 'Torr (utan sprickor eller nämnvärd mängd stoft eller lös sand)',
                               1: 'Fuktig',
