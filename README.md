@@ -56,8 +56,8 @@ client = MetObsClient()
 # For the parameter we can pass either the ParametersMetObs enum
 # or simply the SMHI integer id (which is 1 for hourly air temperature)
 air_temp = client.get_observations(parameter=ParametersMetObs.TemperatureAirHour,
-                         station= 98230,
-                         period= 'latest-months')
+                         station=98230,
+                         period='latest-months')
 
 # observations are stored under "data" attribute as a pandas.Series
 air_temp.data.head(5)
