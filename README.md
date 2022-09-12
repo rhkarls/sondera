@@ -6,9 +6,10 @@
 
 ## Overview
 sondera is a python package providing clients for accessing Swedish hydrology and meteorology related open data and observations.
+Data sources currently include SMHI open data API and SGU groundwater API.
 
-Development Status: :bangbang: Pre-Alpha.
-Consider the API unstable, it may change at short/no notice.
+Development Status: Pre-Alpha.
+Consider the API unstable, it may change at short or no notice.
 
 ### Data sources and licenses
 It is the end users responsibility to adhere to the license of each respective
