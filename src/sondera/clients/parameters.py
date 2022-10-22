@@ -96,92 +96,57 @@ class SGULanCodes(Enum):
 # move else where, own file
 # TODO str_pattern doesnt have to be unique, just to find the line in each csv str
 #       Only a few (2-3?) different formats
+
+met_obs_patterns = {
+    'rep_day': {
+        'str_pattern': 'Från Datum Tid (UTC);Till Datum Tid (UTC);Representativt dygn',
+        'use_cols': [2, 3, 4],
+        'timestamp_type': 'ref_day'},
+    'rep_month': {
+        'str_pattern': 'Från Datum Tid (UTC);Till Datum Tid (UTC);Representativ månad',
+        'use_cols': [2, 3, 4],
+        'timestamp_type': 'ref_month'},
+    'date_time': {
+        'str_pattern': 'Datum;Tid (UTC)',
+        'use_cols': [0, 1, 2, 3],
+        'timestamp_type': 'date_time'}}
+
 # get str pattern by looking up data:
 # https://opendata-download-metobs.smhi.se/api/version/latest/parameter/3.json
 # then click on a station corrected-archive
 
 smhi_parameter_patterns = {
-    ParametersMetObs.TemperatureAirHour: {'str_pattern': 'Datum;Tid (UTC);Lufttemperatur',
-                                          'use_cols': [0, 1, 2, 3],
-                                          'timestamp_type': 'date_time'},
-    ParametersMetObs.TemperatureAirDay: {
-        'str_pattern': 'Från Datum Tid (UTC);Till Datum Tid (UTC);Representativt dygn',
-        'use_cols': [2, 3, 4],
-        'timestamp_type': 'ref'},
-    ParametersMetObs.WindDirection: {
-        'str_pattern': 'Datum;Tid (UTC);Vindriktning',
-        'use_cols': [0, 1, 2, 3],
-        'timestamp_type': 'date_time'},
-    ParametersMetObs.WindSpeed: {'str_pattern': 'Datum;Tid (UTC);Vindhastighet',
-                                 'use_cols': [0, 1, 2, 3],
-                                 'timestamp_type': 'date_time'},
-    ParametersMetObs.PrecipitationDayAt06: {
-        'str_pattern': 'Från Datum Tid (UTC);Till Datum Tid (UTC);Representativt dygn',
-        'use_cols': [2, 3, 4],
-        'timestamp_type': 'ref'},
-    ParametersMetObs.RelativeHumidity: {
-        'str_pattern': 'Datum;Tid (UTC);Relativ Luftfuktighet',
-        'use_cols': [0, 1, 2, 3],
-        'timestamp_type': 'date_time'},
-    ParametersMetObs.PrecipitationHour: {
-        'str_pattern': 'Datum;Tid (UTC);Nederbördsmängd',
-        'use_cols': [0, 1, 2, 3],
-        'timestamp_type': 'date_time'},
-    ParametersMetObs.SnowDepth: {'str_pattern': 'Datum;Tid (UTC);Snödjup',
-                                 'use_cols': [0, 1, 2, 3],
-                                 'timestamp_type': 'date_time'},
-    ParametersMetObs.PressureAir: {
-        'str_pattern': 'Datum;Tid (UTC);Lufttryck',
-        'use_cols': [0, 1, 2, 3],
-        'timestamp_type': 'date_time'},
-    ParametersMetObs.SunshineDuration: {
-        'str_pattern': 'Datum;Tid (UTC);Solskenstid',
-        'use_cols': [0, 1, 2, 3],
-        'timestamp_type': 'date_time'},
-    ParametersMetObs.RadiationGlobal: {
-        'str_pattern': 'Datum;Tid (UTC);Global Irradians',
-        'use_cols': [0, 1, 2, 3],
-        'timestamp_type': 'date_time'},
-    ParametersMetObs.Visibility: {
-        'str_pattern': 'Datum;Tid (UTC);Sikt',
-        'use_cols': [0, 1, 2, 3],
-        'timestamp_type': 'date_time'},
-    ParametersMetObs.CurrentWeather: {
-        'str_pattern': 'Datum;Tid (UTC);Rådande väder',
-        'use_cols': [0, 1, 2, 3],
-        'timestamp_type': 'date_time'},
-    ParametersMetObs.Precipitation15min: {
-        'str_pattern': 'Datum;Tid (UTC);Nederbördsmängd',
-        'use_cols': [0, 1, 2, 3],
-        'timestamp_type': 'date_time'},
-    ParametersMetObs.PrecipitationIntensityMax15min: {
-        'str_pattern': 'Datum;Tid (UTC);Nederbördsintensitet',
-        'use_cols': [0, 1, 2, 3],
-        'timestamp_type': 'date_time'},
-    ParametersMetObs.Cloudiness: {
-        'str_pattern': 'Datum;Tid (UTC);Total molnmängd',
-        'use_cols': [0, 1, 2, 3],
-        'timestamp_type': 'date_time'},
-    ParametersMetObs.PrecipitationTypeAt06And18: {
-        'str_pattern': 'Datum;Tid (UTC);Nederbörd',
-        'use_cols': [0, 1, 2, 3],
-        'timestamp_type': 'date_time'},
-    ParametersMetObs.PrecipitationTypeDayAt06: {
-        'str_pattern': 'Från Datum Tid (UTC);Till Datum Tid (UTC);Representativt dygn;Nederbörd',
-        'use_cols': [2, 3, 4],
-        'timestamp_type': 'ref'},
-    ParametersMetObs.TemperatureAirMin: {
-        'str_pattern': 'Från Datum Tid (UTC);Till Datum Tid (UTC);Representativt dygn;Lufttemperatur',
-        'use_cols': [2, 3, 4],
-        'timestamp_type': 'ref'},
-    ParametersMetObs.TemperatureAirMax: {
-        'str_pattern': 'Från Datum Tid (UTC);Till Datum Tid (UTC);Representativt dygn;Lufttemperatur',
-        'use_cols': [2, 3, 4],
-        'timestamp_type': 'ref'},
-    ParametersMetObs.GroundConditions: {'str_pattern': 'Datum;Tid (UTC);Markens tillstånd',
-                                        'use_cols': [0, 1, 2, 3],
-                                        'timestamp_type': 'date_time'},
-
+    # ParametersMetObs.TemperatureAirHour: {'str_pattern': 'Datum;Tid (UTC);Lufttemperatur',
+    #                                       'use_cols': [0, 1, 2, 3],
+    #                                       'timestamp_type': 'date_time'},
+    # ParametersMetObs.TemperatureAirDay: {
+    #     'str_pattern': 'Från Datum Tid (UTC);Till Datum Tid (UTC);Representativt dygn',
+    #     'use_cols': [2, 3, 4],
+    #     'timestamp_type': 'ref'},
+    ParametersMetObs.TemperatureAirHour: met_obs_patterns['date_time'],
+    ParametersMetObs.TemperatureAirDay: met_obs_patterns['rep_day'],
+    ParametersMetObs.WindDirection: met_obs_patterns['date_time'],
+    ParametersMetObs.WindSpeed: met_obs_patterns['date_time'],
+    ParametersMetObs.PrecipitationDayAt06: met_obs_patterns['rep_day'],
+    ParametersMetObs.RelativeHumidity: met_obs_patterns['date_time'],
+    ParametersMetObs.PrecipitationHour: met_obs_patterns['date_time'],
+    ParametersMetObs.SnowDepth: met_obs_patterns['date_time'],
+    ParametersMetObs.PressureAir: met_obs_patterns['date_time'],
+    ParametersMetObs.SunshineDuration: met_obs_patterns['date_time'],
+    ParametersMetObs.RadiationGlobal: met_obs_patterns['date_time'],
+    ParametersMetObs.Visibility: met_obs_patterns['date_time'],
+    ParametersMetObs.CurrentWeather: met_obs_patterns['date_time'],
+    ParametersMetObs.Precipitation15min: met_obs_patterns['date_time'],
+    ParametersMetObs.PrecipitationIntensityMax15min: met_obs_patterns['date_time'],
+    ParametersMetObs.Cloudiness: met_obs_patterns['date_time'],
+    ParametersMetObs.PrecipitationTypeAt06And18: met_obs_patterns['date_time'],
+    ParametersMetObs.PrecipitationTypeDayAt06: met_obs_patterns['rep_day'],
+    ParametersMetObs.TemperatureAirMin: met_obs_patterns['rep_day'],
+    ParametersMetObs.TemperatureAirMax: met_obs_patterns['rep_day'],
+    ParametersMetObs.WindSpeedGust: met_obs_patterns['date_time'],
+    ParametersMetObs.TemperatureAirMeanMonth: met_obs_patterns['rep_month'],
+    ParametersMetObs.GroundConditions: met_obs_patterns['date_time'],
+    # Different from the metobs patterns
     ParametersHydroObs.Discharge: {'str_pattern': 'Datum (svensk sommartid);Vattenföring',
                                    'use_cols': [0, 1, 2],
                                    'timestamp_type': 'date'}}  # NOTE ONLY HYDROOBS CAN HAVE DATE ATM, CHANGE IN CODE NEEDED IF OTHER HAVE IT TOO
