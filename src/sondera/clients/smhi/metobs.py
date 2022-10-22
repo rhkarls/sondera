@@ -10,7 +10,7 @@ except ImportError:
         from backports.zoneinfo import ZoneInfo
     except ImportError:
         print('ZoneInfo, included in the standard library for python => 3.9, '
-              'is required. Update python, or install backports.zoneinfo')
+              'is required. Update python, or install backports.zoneinfo for python 3.8')
         raise
 
 import collections
@@ -125,11 +125,7 @@ class MetObsClient:
                                station: int,
                                period: str) -> DataSeries:
         # extension for data
-        if period.lower() == 'corrected-archive':
-            api_ext = 'csv'
-        else:
-            api_ext = 'json'
-
+        api_ext = 'csv' if period.lower() == 'corrected-archive' else 'json'
         if isinstance(parameter, int):
             try:
                 parameter = self.Parameters(parameter)
@@ -185,8 +181,8 @@ class MetObsClient:
             df_values['timestamp'] = pd.to_datetime(df_values['date'], unit='ms',
                                                     origin='unix')  # TODO set timezone
             df_values = df_values.drop('date', axis=1)
-        elif smhi_parameter_patterns[parameter]['timestamp_type'] == 'ref':
-            df_values['timestamp'] = pd.to_datetime(df_values['ref'])  # TODO set timezone
+        elif smhi_parameter_patterns[parameter]['timestamp_type'] == 'ref_day':
+            df_values['timestamp'] = pd.to_datetime(df_values['ref'])  # TODO set timezone # TODO works for month??
             df_values = df_values.drop('ref', axis=1)
 
         df_values = df_values.set_index('timestamp')
@@ -229,9 +225,12 @@ class MetObsClient:
         elif smhi_parameter_patterns[parameter]['timestamp_type'] in ['date']:
             csv_df['timestamp'] = pd.to_datetime(csv_df['Datum (svensk sommartid)'])
             csv_df = csv_df.drop(['Datum (svensk sommartid)'], axis=1)
-        elif smhi_parameter_patterns[parameter]['timestamp_type'] in ['ref']:
+        elif smhi_parameter_patterns[parameter]['timestamp_type'] in ['ref_day']:
             csv_df['timestamp'] = pd.to_datetime(csv_df['Representativt dygn'])
             csv_df = csv_df.drop(['Representativt dygn'], axis=1)
+        elif smhi_parameter_patterns[parameter]['timestamp_type'] in ['ref_month']:
+            csv_df['timestamp'] = pd.to_datetime(csv_df['Representativ månad'])
+            csv_df = csv_df.drop(['Representativ månad'], axis=1)
 
         csv_df = csv_df.set_index('timestamp')
         swe_par_name = self.api_params_dict[parameter.value]['title']
@@ -403,11 +402,8 @@ class MetObsClient:
         api_get_version = requests.get(api_url_version)
 
         v_resource = api_get_version.json()['resource']
-        v_params = {}
+        v_params = {int(vr['key']): {'title': vr['title'], 'summary': vr['summary']} for vr in v_resource}
 
-        for vr in v_resource:
-            v_params[int(vr['key'])] = {'title': vr['title'],
-                                        'summary': vr['summary']}
 
         v_params = collections.OrderedDict(sorted(v_params.items()))  # noqa
 
