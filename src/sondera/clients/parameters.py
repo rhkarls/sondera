@@ -46,7 +46,7 @@ class ParametersMetObs(Enum):
     WindSpeedMax = 25  # Max av MedelVindhastighet, maximum av medelvärde 10 min, under 3 timmar, 1 gång/tim
     TemperatureAirMinAt06At18 = 26  # Lufttemperatur, min, 2 gånger per dygn, kl 06 och 18
     TemperatureAirMaxAt06At18 = 27  # Lufttemperatur, max, 2 gånger per dygn, kl 06 och 18
-    CloudBaseLayer1 = 28  # Molnbas, lägsta molnlager, momentanvärde, 1 gång/tim
+    CloudBaseLayer1 = 28  # Molnbas, lägsta molnlager, momentanvärde, 1 gång/tim (meters)
     CloudinessLayer1 = 29  # Molnmängd, lägsta molnlager, momentanvärde, 1 gång/tim
     CloudBaseLayer2 = 30  # Molnbas, andra molnlager, momentanvärde, 1 gång/tim
     CloudinessLayer2 = 31  # Molnmängd, andra molnlager, momentanvärde, 1 gång/tim
@@ -111,18 +111,8 @@ met_obs_patterns = {
         'use_cols': [0, 1, 2, 3],
         'timestamp_type': 'date_time'}}
 
-# get str pattern by looking up data:
-# https://opendata-download-metobs.smhi.se/api/version/latest/parameter/3.json
-# then click on a station corrected-archive
-
+# CSV structure pattern for archive data
 smhi_parameter_patterns = {
-    # ParametersMetObs.TemperatureAirHour: {'str_pattern': 'Datum;Tid (UTC);Lufttemperatur',
-    #                                       'use_cols': [0, 1, 2, 3],
-    #                                       'timestamp_type': 'date_time'},
-    # ParametersMetObs.TemperatureAirDay: {
-    #     'str_pattern': 'Från Datum Tid (UTC);Till Datum Tid (UTC);Representativt dygn',
-    #     'use_cols': [2, 3, 4],
-    #     'timestamp_type': 'ref'},
     ParametersMetObs.TemperatureAirHour: met_obs_patterns['date_time'],
     ParametersMetObs.TemperatureAirDay: met_obs_patterns['rep_day'],
     ParametersMetObs.WindDirection: met_obs_patterns['date_time'],
@@ -145,16 +135,35 @@ smhi_parameter_patterns = {
     ParametersMetObs.TemperatureAirMax: met_obs_patterns['rep_day'],
     ParametersMetObs.WindSpeedGust: met_obs_patterns['date_time'],
     ParametersMetObs.TemperatureAirMeanMonth: met_obs_patterns['rep_month'],
+    ParametersMetObs.PrecipitationMonth: met_obs_patterns['rep_month'],
+    ParametersMetObs.RadiationLongwave: met_obs_patterns['date_time'],
+    ParametersMetObs.WindSpeedMax: met_obs_patterns['date_time'],
+    ParametersMetObs.TemperatureAirMinAt06At18: met_obs_patterns['date_time'],
+    ParametersMetObs.TemperatureAirMaxAt06At18: met_obs_patterns['date_time'],
+    ParametersMetObs.CloudBaseLayer1: met_obs_patterns['date_time'],
+    ParametersMetObs.CloudinessLayer1: met_obs_patterns['date_time'],
+    ParametersMetObs.CloudBaseLayer2: met_obs_patterns['date_time'],
+    ParametersMetObs.CloudinessLayer2: met_obs_patterns['date_time'],
+    ParametersMetObs.CloudBaseLayer3: met_obs_patterns['date_time'],
+    ParametersMetObs.CloudinessLayer3: met_obs_patterns['date_time'],
+    ParametersMetObs.CloudBaseLayer4: met_obs_patterns['date_time'],
+    ParametersMetObs.CloudinessLayer4: met_obs_patterns['date_time'],
+    ParametersMetObs.CloudBaseLayerLowest: met_obs_patterns['date_time'],
+    ParametersMetObs.CloudBaseLayerLowestMin: met_obs_patterns['date_time'],
+    ParametersMetObs.PrecipitationIntensityMaxMean15min: met_obs_patterns['date_time'],
+    ParametersMetObs.TemperatureDewPoint: met_obs_patterns['date_time'],
     ParametersMetObs.GroundConditions: met_obs_patterns['date_time'],
-    # Different from the metobs patterns
+
+    # HydroObs is different from the MetObs patterns
     ParametersHydroObs.Discharge: {'str_pattern': 'Datum (svensk sommartid);Vattenföring',
                                    'use_cols': [0, 1, 2],
                                    'timestamp_type': 'date'}}  # NOTE ONLY HYDROOBS CAN HAVE DATE ATM, CHANGE IN CODE NEEDED IF OTHER HAVE IT TOO
 
 
 # SMHI:
+# TODO how to translate these for the output? Applies to all timeperiods, not just the archive..
 # Rådande väder
-# Moln mängd
+# Moln mängd (CloudinessLayerX)
 
 smhi_groundcondition_codes = {0: 'Torr (utan sprickor eller nämnvärd mängd stoft eller lös sand)',
                               1: 'Fuktig',

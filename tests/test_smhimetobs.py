@@ -42,7 +42,7 @@ def test_get_observations_old_timestamp(api_client):
 
 # test that csv parsing works on api data
 # 68560 Hoburg A, active from 2009, has many of the parameters
-# 68545 Hoburg Sol, active from 2012
+# 68545 Hoburg Sol, active from 2012, alternative 140615 Umeå Sol from 2016
 # 78320 Mästerby, active from 2016, snow measurements
 @pytest.mark.parametrize("parameter, station", [
     (1, 68560),
@@ -65,6 +65,25 @@ def test_get_observations_old_timestamp(api_client):
     (18, 68560),
     (19, 68560),
     (20, 68560),
+    (21, 68560),
+    (22, 68560),
+    (23, 68560),
+    (24, 140615),
+    (25, 68560),
+    (26, 68560),
+    (27, 68560),
+    (28, 68560),
+    (29, 68560),
+    (30, 68560),
+    (31, 68560),
+    (32, 68560),
+    (33, 68560),
+    (34, 68560),
+    (35, 68560),
+    (36, 68560),
+    (37, 68560),
+    (38, 68560),
+    (39, 68560),
     (40, 78320),
 ])
 def test_csv_patterns(api_client, parameter, station):
