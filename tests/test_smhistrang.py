@@ -32,3 +32,15 @@ def test_point_valid(api_client, parameter):
                                          agg_interval=agg_interval)
 
     assert len(api_data) > 0
+
+
+def test_point_datetime():
+    pass
+
+
+def test_point_pd_timestamp():
+    pass
+
+
+def test_point_tz():
+    pass
