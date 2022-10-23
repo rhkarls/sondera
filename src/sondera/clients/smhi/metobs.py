@@ -27,25 +27,7 @@ from ...datatypes import DataSeries, StationType, Coordinate, Station
 from ..parameters import smhi_parameter_patterns
 from ..parameters import ParametersMetObs as Parameters
 
-
-def _make_request(api_url):
-    """ All API requests are passed through this function """
-    api_get_result = requests.get(api_url)
-
-    # Check result for error
-    if api_get_result.status_code != 200:
-        if api_get_result.status_code == 404:
-            message = (api_get_result.reason +
-                       ". This probably means that either the station, parameter "
-                       "and/or period is not valid. Note that all periods are not "
-                       "available for all stations.")
-        else:
-            message = api_get_result.reason
-
-        raise APIError(api_get_result.status_code,
-                       message)
-    else:
-        return api_get_result
+from .common import _make_request
 
 
 class MetObsClient:
@@ -75,6 +57,10 @@ class MetObsClient:
         # dict with stations that include a parameter
         self.parameter_stations = {}
         self.get_all_stations_called = False
+
+        self.append_404_message = (". This probably means that either the station, parameter "
+                                     "and/or period is not valid. Note that all periods are not "
+                                     "available for all stations.")
 
     def get_observations(self,
                          parameter: Union[Parameters, int],
@@ -139,12 +125,12 @@ class MetObsClient:
 
         # Get station metadata
         api_url_station = self._api_url_template_station.format(**api_vars) + '.json'
-        api_get_station = _make_request(api_url_station)
+        api_get_station = _make_request(api_url_station, self.append_404_message)
         station_md = api_get_station.json()
 
         # Get data
         api_url = self._api_url_template_data.format(**api_vars)
-        api_get_result = _make_request(api_url)
+        api_get_result = _make_request(api_url, self.append_404_message)
 
         if api_ext == 'json':
             api_result_json = api_get_result.json()
@@ -344,7 +330,7 @@ class MetObsClient:
 
         api_url_parameter = self._api_url_template_parameter.format(parameter=parameter,
                                                                     extension='json')
-        api_get_parameter = _make_request(api_url_parameter)
+        api_get_parameter = _make_request(api_url_parameter, self.append_404_message)
         parameter_response = api_get_parameter.json()
 
         # loop over stations that have this parameter
