@@ -13,10 +13,10 @@ Multipoint
 """
 from typing import Union
 import datetime
+
 import pandas as pd
 
 from ..parameters import ParametersStrang as Parameters
-
 from .common import _make_request
 
 
@@ -41,8 +41,36 @@ class StrangClient:
                        lat: float,
                        date_from: Union[pd.Timestamp, datetime.datetime, str],
                        date_to: Union[pd.Timestamp, datetime.datetime, str],
-                       agg_interval: str,  # Valid values are hourly, daily and monthly.
+                       agg_interval: str,
                        ) -> pd.Series:
+        """
+        Get Strång data for a single latitude-longitude coordinate.
+
+        Parameters
+        ----------
+        parameter : int or ParametersStrang enum
+            The parameter for the radiation data type.
+        lon : float
+            Longitude in decimal degrees.
+        lat : float
+            Latitude in decimal degrees.
+        date_from : str, datetime or pandas.Timestamp
+            Retrieve data starting from this datetime.
+        date_to : str, datetime or pandas.Timestamp
+            Retrieve data up to this datetime.
+        agg_interval : str
+            Aggregation interval. Valid values are 'hourly', 'daily' and 'monthly'.
+
+        Returns
+        -------
+        A pandas Series of values returned by Strång API
+
+        Notes
+        -----
+        https://strang.smhi.se/
+
+        https://opendata.smhi.se/apidocs/strang/
+        """
 
         if isinstance(parameter, int):
             try:
@@ -82,7 +110,11 @@ class StrangClient:
 
         return data_series
 
-
     def get_data_multipoint(self):
         raise NotImplementedError # requires xarray heavy dependence
+
+    def get_data_multipoint_period(self):
+        # Get multipoint data for a range of times (provided as sequence of timestamps)
+        # Resample timestamps to hourly if provided with higher freq
+        raise NotImplementedError  # requires xarray heavy dependence
 
