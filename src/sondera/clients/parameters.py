@@ -8,14 +8,13 @@ from enum import Enum
 
 class ParametersHydroObs(Enum):
     """
-    Numbers match API integer parameter ids
-
+    Integer values of enum match API integer parameter ids
     """
     Discharge = 1  # Vattenföring, dygn
 
 
 class ParametersMetObs(Enum):
-    """ Numbers match API integer parameter ids
+    """ Integer values of enum match API integer parameter ids
     For values that are coded:
     https://opendata.smhi.se/apidocs/metobs/codes.html
     """
@@ -59,6 +58,24 @@ class ParametersMetObs(Enum):
     PrecipitationIntensityMaxMean15min = 38  # Nederbördsintensitet, max av medel under 15 min, 4 gånger/tim
     TemperatureDewPoint = 39  # Daggpunktstemperatur, momentanvärde, 1 gång/tim
     GroundConditions = 40  # Markens tillstånd, momentanvärde, 1 gång/dygn, kl 06
+
+
+class ParametersStrang(Enum):
+    """
+    Parameter 	Meaning 	                        Availability
+    116 	    CIE UV irradiance [mW/m²]   	    1999-01-01 - present
+    117 	    Global irradiance [W/m²] 	        1999-01-01 - present
+    118 	    Direct normal irradiance [W/m²]     1999-01-01 - present
+    120 	    PAR [W/m²] 	                        1999-01-01 - present
+    121 	    Direct horizontal irradiance [W/m²] 2017-04-18 - present
+    122 	    Diffuse irradiance [W/m²] 	        2017-04-18 - present
+    """
+    CIEUVIrradiance = 116
+    GlobalIrradiance = 117
+    DirectNormalIrradiance = 118
+    PAR = 120
+    DirectHorizontalIrradiance = 121
+    DiffuseIrradiance = 122
 
 
 class ParametersGWLevels(Enum):
