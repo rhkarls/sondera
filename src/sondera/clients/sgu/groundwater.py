@@ -20,9 +20,7 @@ class GroundwaterLevels:
     _api_url_v1 = 'https://resource.sgu.se/oppnadata/grundvatten/grundvattennivaer'
 
     def __init__(self):
-
-        # self.Parameters = Parameters
-
+        self.Parameters = Parameters
         # Returns all observations for a station-id
         self._api_url_template_data = (self._api_url +
                                        '/nivaer/station'
@@ -42,9 +40,35 @@ class GroundwaterLevels:
 
     def get_observations(self,
                          station_code: str,
-                         parameter: Parameters = Parameters.LevelBelowGroundSurface):
+                         parameter: Parameters = Parameters.LevelBelowGroundSurface) -> DataSeries:
         """ Get data for a given station / groundwater well
-        Returns data for LevelBelowGroundSurface if not provided
+        Returns data for groundwater level below ground surface (parameter LevelBelowGroundSurface) 
+        by default.
+        
+        For station codes also see functions get_all_stations_lan() and get_all_stations().
+        
+        Parameters
+        ----------
+        station_code : str
+            SGU station code
+        parameter : str or ParametersGWLevels Enum.
+            valid Enum and string options are
+            ParametersGWLevels.LevelBelowWellTop : 'grundvattenniva_cm_u._roroverkant'
+            ParametersGWLevels.LevelAboveSeaLevel : 'grundvattenniva_m_o.h.'
+            ParametersGWLevels.LevelBelowGroundSurface : 'grundvattenniva_m_under_markyta'
+
+            Note that  groundwater level above sea level is returned with an unknown vertical datum,
+            official documentation states "usually RH70".
+
+        Returns
+        -------
+        A DataSeries object with observations and station metadata
+        
+        Notes
+        -----
+        https://www.sgu.se/produkter/geologiska-data/oppna-data/grundvatten-oppna-data/grundvattennivaer-tidsserier/
+
+        https://resource.sgu.se/dokument/produkter/oppnadata/grundvattennivaer-tidsserier-oppnadata-beskrivning.pdf
         """
 
         api_vars = {'station': station_code}
@@ -83,14 +107,27 @@ class GroundwaterLevels:
         api_data_s = api_data['features'][0]
         station_md = self._add_station_info(api_data_s, station_md)
 
-        return self._create_data_obj(aux_df, obs_s, parameter, station_md, station_name, md_str)
+        return self._create_data_obj(aux_df, obs_s, parameter,
+                                     station_md, station_name, md_str)
 
     def get_observations_lan(self, lan_code: Union[SGULanCodes, str]):
         # can probably share a lot with above get_station_data
         raise NotImplementedError
 
+    def list_sgu_lan_codes(self):
+        """ Prints the SGU Län codes """
+        for e in SGULanCodes: print(f"{e.name}: {e.value}")
+
     def get_all_stations_lan(self, lan_code: Union[SGULanCodes, str]):
-        """ Get all stations and station metadata for a given län"""
+        """ Get all stations and station metadata for a given län. See Enum SGULanCodes or list_sgu_lan_codes()
+        for list of län codes, alternatively the official documentation of the SGU API (links below).
+
+        Notes
+        -----
+        https://www.sgu.se/produkter/geologiska-data/oppna-data/grundvatten-oppna-data/grundvattennivaer-tidsserier/
+
+        https://resource.sgu.se/dokument/produkter/oppnadata/grundvattennivaer-tidsserier-oppnadata-beskrivning.pdf
+        """
         # TODO return as dataframe and/or dict of Station objects?
         if isinstance(lan_code, str):
             lan_code = SGULanCodes(lan_code)
@@ -112,7 +149,7 @@ class GroundwaterLevels:
 
             s_d = {'X': s_x,
                    'Y': s_y,
-                   'code': s['properties'].get('omrade-_och_stationsnummer', None),}
+                   'code': s['properties'].get('omrade-_och_stationsnummer', None), }
 
             station_info = {}
             station_info = self._add_station_info(s, station_info)
@@ -132,12 +169,11 @@ class GroundwaterLevels:
 
         # station can have key 'referensniva_for_roroverkant_m_o.h.' or
         #                      'referensniva_for_roroverkant_m.o.h.'
-        # for datum level, only one can be present for each station
+        # for datum level.
         # only one will be present for each station, sometimes none
         try:
             ref_datum_level_key = list({'referensniva_for_roroverkant_m_o.h.', 'referensniva_for_roroverkant_m.o.h.'}
                                        .intersection(api_data_s['properties'].keys()))[0]
-
         except IndexError:
             ref_datum_level_key = None
 
@@ -161,6 +197,15 @@ class GroundwaterLevels:
                          station_md, station_name, md_str):
         # sourcery skip: inline-immediately-returned-variable
 
+        if isinstance(parameter, str):
+            try:
+                parameter = self.Parameters(parameter)
+            except ValueError as error:
+                raise
+
+        # TODO Z coordinate possible to get from 'station_info' and
+        # 'reference_datum_well_top' - 'well_elev_above_ground'
+        # Problem is unknown vertical datum, official documentation says "usually RH70"
         pos_coord = Coordinate(x=station_md['coordinates'][0],
                                y=station_md['coordinates'][1],
                                epsg_xy=station_md['crs'])
