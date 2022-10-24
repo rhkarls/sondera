@@ -108,3 +108,4 @@ ENV/
 .idea/
 
 .private_notes.txt
+.private_notes.md
