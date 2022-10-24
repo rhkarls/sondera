@@ -86,25 +86,25 @@ class MetObsClient:
 
         # 'corrected-archive-latest-months', need to move the client call away
         # from the api call itself
-        if period.lower() == 'corrected-archive-latest-months':
-            station_data_ca = self._api_call_observations(parameter,
-                                                          station,
-                                                          'corrected-archive')
-
-            station_data_lm = self._api_call_observations(parameter,
-                                                          station,
-                                                          'latest-months')
-            # combine the two data sets, base of data_lm and extend the data series
-
-            station_data = station_data_lm  # TODO copy?
-            new_obs_s = station_data_ca.data.combine_first(station_data_lm.data)
-            new_aux_s = station_data_ca.aux_data.combine_first(station_data_lm.aux_data)
-            station_data.data = new_obs_s
-            station_data.aux_data = new_aux_s
-
-            return station_data
-        else:
+        if period.lower() != 'corrected-archive-latest-months':
             return self._api_call_observations(parameter, station, period)
+
+        station_data_ca = self._api_call_observations(parameter,
+                                                      station,
+                                                      'corrected-archive')
+
+        station_data_lm = self._api_call_observations(parameter,
+                                                      station,
+                                                      'latest-months')
+        # combine the two data sets, base of data_lm and extend the data series
+
+        station_data = station_data_lm  # TODO copy?
+        new_obs_s = station_data_ca.data.combine_first(station_data_lm.data)
+        new_aux_s = station_data_ca.aux_data.combine_first(station_data_lm.aux_data)
+        station_data.data = new_obs_s
+        station_data.aux_data = new_aux_s
+
+        return station_data
 
     def _api_call_observations(self,
                                parameter: Union[Parameters, int],
