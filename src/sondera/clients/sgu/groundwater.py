@@ -4,11 +4,6 @@ Client for SGU groundwater levels api
 https://www.sgu.se/produkter/geologiska-data/oppna-data/grundvatten-oppna-data/grundvattennivaer-tidsserier/
 
 """
-
-import collections
-from enum import Enum
-from io import StringIO
-import datetime as dt
 from typing import Union
 
 import pandas as pd
@@ -34,14 +29,9 @@ class GroundwaterLevels:
                                        '/{station}?format=json')
 
         # Returns all observations for all stations in a specified län
-        self._api_url_template_data_lan = (self._api_url +
+        self._api_url_template_data_lan = (self._api_url_v1 +
                                            '/nivaer/v1/lan/{lancode}'
                                            '?format=json')
-
-        # Old format, deprecated
-        # self._api_url_template_data_lan = (self._api_url +
-        #                                    '/nivaer/lan'
-        #                                    '/{lancode}?format=json')
 
         # List of stations available for each län
         self._api_url_template_stations_lan = (self._api_url +
@@ -90,38 +80,10 @@ class GroundwaterLevels:
         # TODO: can lancode be taken from kommunkod? first two characters
         # can be used to query for stations nearby
 
-        # station can have key 'referensniva_for_roroverkant_m_o.h.' or
-        #                      'referensniva_for_roroverkant_m.o.h.'
-        # for datum level, only one can be present for each station
-        # only one will be present for each station, sometimes none
         api_data_s = api_data['features'][0]
         station_md = self._add_station_info(api_data_s, station_md)
 
         return self._create_data_obj(aux_df, obs_s, parameter, station_md, station_name, md_str)
-
-    def _add_station_info(self, api_data_s, station_md):
-        try:
-            ref_datum_level_key = list({'referensniva_for_roroverkant_m_o.h.', 'referensniva_for_roroverkant_m.o.h.'}
-                                       .intersection(api_data_s['properties'].keys()))[0]
-
-        except IndexError:
-            ref_datum_level_key = None
-
-        station_md['station_info'] = {
-            'start_date': api_data_s['properties'].get('startdatum_for_matning', None),
-            'soil_type': api_data_s['properties'].get('jordart', None),
-            'aquifer_type': api_data_s['properties'].get('akvifertyp', None),
-            'topographic_position': api_data_s['properties'].get('topografiskt_lage', None),
-            'reference_datum_well_top': api_data_s['properties'].get(ref_datum_level_key,
-                                                                                    None),
-            'well_elev_above_ground': api_data_s['properties'].get('rorhojd_ovan_mark_m', None),
-            'well_length': api_data_s['properties'].get('total_rorlangd_m', None),
-            'municipality': api_data_s['properties'].get('kommunkod', None),
-            'eucd_groundwater_resource': api_data_s['properties'].get('eucd_far_grundvattenforekomst',
-                                                                                     None),
-            'measurement_quality': api_data_s['properties'].get('nivamatningskvalitet', None)}
-
-        return station_md
 
     def get_observations_lan(self, lan_code: Union[SGULanCodes, str]):
         # can probably share a lot with above get_station_data
@@ -157,31 +119,6 @@ class GroundwaterLevels:
             # FIXME Future. 3.9 merge dicts with |
             s_d = {**s_d, **station_info['station_info']}
 
-            # station can have key 'referensniva_for_roroverkant_m_o.h.' or
-            #                      'referensniva_for_roroverkant_m.o.h.'
-            # for datum level, only one can be present for each station
-            # only one will be present for each station, sometimes none
-            # try:
-            #     ref_datum_level_key = list({'referensniva_for_roroverkant_m_o.h.', 'referensniva_for_roroverkant_m.o.h.'}
-            #                                .intersection(s['properties'].keys()))[0]
-            # except IndexError:
-            #     ref_datum_level_key = None
-            #
-            # s_d = {'X': s_x,
-            #        'Y': s_y,
-            #        'code': s['properties'].get('omrade-_och_stationsnummer', None),
-            #        'name': s['properties'].get('stationens_namn', None),
-            #        'start_date': s['properties'].get('startdatum_for_matning', None),
-            #        'soil_type': s['properties'].get('jordart', None),
-            #        'aquifer_type': s['properties'].get('akvifertyp', None),
-            #        'topographic_position': s['properties'].get('topografiskt_lage', None),
-            #        'reference_datum_well_top': s['properties'].get(ref_datum_level_key, None),
-            #        'well_elev_above_ground': s['properties'].get('rorhojd_ovan_mark_m', None),
-            #        'well_length': s['properties'].get('total_rorlangd_m', None),
-            #        'municipality': s['properties'].get('kommunkod', None),
-            #        'eucd_groundwater_resource': s['properties'].get('eucd_far_grundvattenforekomst', None),
-            #        'measurement_quality': s['properties'].get('nivamatningskvalitet', None)
-            #        }
             stations_df = pd.concat([stations_df, pd.Series(s_d, name=s_d['code'])], axis=1)
 
         return stations_df
@@ -189,6 +126,36 @@ class GroundwaterLevels:
     def get_all_stations(self):
         # get station info for all lancodes
         raise NotImplementedError
+
+    def _add_station_info(self, api_data_s, station_md):
+        """ Add 'station_info' key with additional station metadata to dict """
+
+        # station can have key 'referensniva_for_roroverkant_m_o.h.' or
+        #                      'referensniva_for_roroverkant_m.o.h.'
+        # for datum level, only one can be present for each station
+        # only one will be present for each station, sometimes none
+        try:
+            ref_datum_level_key = list({'referensniva_for_roroverkant_m_o.h.', 'referensniva_for_roroverkant_m.o.h.'}
+                                       .intersection(api_data_s['properties'].keys()))[0]
+
+        except IndexError:
+            ref_datum_level_key = None
+
+        station_md['station_info'] = {
+            'start_date': api_data_s['properties'].get('startdatum_for_matning', None),
+            'soil_type': api_data_s['properties'].get('jordart', None),
+            'aquifer_type': api_data_s['properties'].get('akvifertyp', None),
+            'topographic_position': api_data_s['properties'].get('topografiskt_lage', None),
+            'reference_datum_well_top': api_data_s['properties'].get(ref_datum_level_key,
+                                                                     None),
+            'well_elev_above_ground': api_data_s['properties'].get('rorhojd_ovan_mark_m', None),
+            'well_length': api_data_s['properties'].get('total_rorlangd_m', None),
+            'municipality': api_data_s['properties'].get('kommunkod', None),
+            'eucd_groundwater_resource': api_data_s['properties'].get('eucd_far_grundvattenforekomst',
+                                                                      None),
+            'measurement_quality': api_data_s['properties'].get('nivamatningskvalitet', None)}
+
+        return station_md
 
     def _create_data_obj(self, aux_df, obs_s, parameter,
                          station_md, station_name, md_str):
