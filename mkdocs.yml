@@ -1,0 +1,17 @@
+site_name: sondera
+theme:
+  name: material
+  highlightjs: true
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        # See: https://mkdocstrings.github.io/python/usage/
+        python:
+          paths: [../src]
+          options:
+            docstring_style: numpy
+markdown_extensions:
+  - markdown_include.include:
+      base_path: .
+  - admonition
