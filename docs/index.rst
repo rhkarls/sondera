@@ -11,8 +11,10 @@ Welcome to sondera's documentation!
    :caption: Contents:
 
    Home <self>
+   installation
    usage
-   api
+   examples
+   sondera api <source/modules>
 
 
 Indices and tables
