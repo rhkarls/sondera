@@ -1,4 +1,3 @@
-mkdocs
-markdown_include
-mkdocstrings[python]
-mkdocs-material
+sphinx
+sphinx_rtd_theme
+myst-parser
