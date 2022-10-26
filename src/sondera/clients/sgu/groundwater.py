@@ -71,6 +71,12 @@ class GroundwaterLevelsClient:
         https://resource.sgu.se/dokument/produkter/oppnadata/grundvattennivaer-tidsserier-oppnadata-beskrivning.pdf
         """
 
+        if isinstance(parameter, str):
+            try:
+                parameter = self.Parameters(parameter)
+            except ValueError as error:
+                raise
+
         api_vars = {'station': station_code}
 
         api_url_data = self._api_url_template_data.format(**api_vars)
@@ -196,12 +202,6 @@ class GroundwaterLevelsClient:
     def _create_data_obj(self, aux_df, obs_s, parameter,
                          station_md, station_name, md_str):
         # sourcery skip: inline-immediately-returned-variable
-
-        if isinstance(parameter, str):
-            try:
-                parameter = self.Parameters(parameter)
-            except ValueError as error:
-                raise
 
         # TODO Z coordinate possible to get from 'station_info' and
         # 'reference_datum_well_top' - 'well_elev_above_ground'
