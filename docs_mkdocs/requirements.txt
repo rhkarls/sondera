@@ -1,4 +1,0 @@
-mkdocs
-markdown_include
-mkdocstrings[python]
-mkdocs-material
