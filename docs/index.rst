@@ -13,7 +13,6 @@ Welcome to sondera's documentation!
    Home <self>
    usage
    api
-   modules
 
 
 Indices and tables
