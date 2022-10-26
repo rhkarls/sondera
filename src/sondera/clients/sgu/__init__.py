@@ -1,2 +1,2 @@
-from .groundwater import GroundwaterLevels
+from .groundwater import GroundwaterLevelsClient
 from ..parameters import SGULanCodes, ParametersGWLevels

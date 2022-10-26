@@ -15,7 +15,7 @@ from ..parameters import SGULanCodes
 from ..parameters import ParametersGWLevels as Parameters
 
 
-class GroundwaterLevels:
+class GroundwaterLevelsClient:
     _api_url = 'https://resource.sgu.se/oppnadata/grundvatten/api/grundvattennivaer'
     _api_url_v1 = 'https://resource.sgu.se/oppnadata/grundvatten/grundvattennivaer'
 

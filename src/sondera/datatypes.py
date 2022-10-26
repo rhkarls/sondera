@@ -63,7 +63,7 @@ class Station:
 
 @dataclass
 class DataSeries:
-    """ General class for observed data series"""
+    """ General class for observed data time series at a station"""
     # some can have additional info, like catchment polygon, catchment size
     # SGU wells carry a lot of fields that are quite relevant
     station: Station

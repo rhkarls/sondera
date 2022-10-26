@@ -68,9 +68,13 @@ class MetObsClient:
                          period: str) -> DataSeries:
         """
         Get observations for a given parameter, station and period
+
+        Parameters
         ----------
         parameter : Enum or int
+            Description
         station : int
+            Description
         period : str
             latest-hour, latest-day, latest-months or corrected-archive as
             supported directly by the SMHI api.
