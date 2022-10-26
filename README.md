@@ -3,6 +3,7 @@
 [![pypi_shield](https://img.shields.io/pypi/v/sondera.svg)](https://pypi.org/project/sondera/)
 [![pypi_license](https://badgen.net/pypi/license/sondera/)](https://pypi.org/project/sondera/)
 ![tests_workflow](https://github.com/rhkarls/sondera/actions/workflows/run_flake8_pytest.yml/badge.svg)
+[![Documentation Status](https://readthedocs.org/projects/sondera/badge/?version=latest)](https://sondera.readthedocs.io/en/latest/?badge=latest)
 
 ## Overview
 sondera is a python package providing clients for accessing Swedish hydrology and meteorology related open data and observations.

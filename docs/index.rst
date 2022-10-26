@@ -6,6 +6,8 @@
 Welcome to sondera's documentation!
 ===================================
 
+Documentation is under construction. Please refer to the :doc:`API reference </source/modules>`.
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
