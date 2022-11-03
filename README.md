@@ -7,9 +7,10 @@
 
 ## Overview
 sondera is a python package providing clients for accessing Swedish hydrology and meteorology related open data and observations.
-Data sources currently include SMHI open data API and SGU groundwater API.
 
-Development Status: Pre-Alpha.
+Download stream discharge, groundwater levels, climate and weather observations and more from stations across Sweden.
+Data sources currently include Swedish Meteorological and Hydrological Institute (SMHI) open data API and Swedish Geological Survey (SGU) groundwater API. 
+
 Consider the API unstable, it may change at short or no notice.
 
 ### Data sources and licenses
@@ -25,6 +26,20 @@ The following clients are currently implemented or under implementation:
 
 **Model products**
 - SMHI Strång mesoscale model for solar radiation ([license](https://creativecommons.org/licenses/by/4.0/legalcode), [host link](https://opendata.smhi.se/apidocs/strang/#license))
+
+
+### Parameters available
+**Hydrometric parameters**
+- Stream discharge
+- Groundwater level
+
+**Weather and climate parameters**
+
+More than 40 parameters, including
+- Precipitation
+- Air temperature
+- Wind speed
+- Solar radiation (station data via MetObs, distributed data via Strång)
 
 ## Requirements and installation
 
