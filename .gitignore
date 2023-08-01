@@ -109,3 +109,5 @@ ENV/
 
 .private_notes.txt
 .private_notes.md
+
+docs_generated_folder/
